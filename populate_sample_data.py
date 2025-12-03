@@ -1,14 +1,27 @@
 """
 Script to populate the database with sample data for testing.
-Run this with: python manage.py shell < populate_sample_data.py
+Run this with: python populate_sample_data.py
 """
+
+import os
+import sys
+import django
+
+# Setup Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hotel_qr_menu_project.settings')
+django.setup()
 
 from decimal import Decimal
 from core.models import Hotel, Category, MenuItem, Table
 
-# Clear existing data (optional - comment out if you want to keep existing data)
-print("Clearing existing data...")
-Hotel.objects.all().delete()
+# Check if data already exists - if so, skip creation
+if Hotel.objects.exists():
+    print("✅ Sample data already exists. Skipping creation.")
+    print(f"   • {Hotel.objects.count()} Businesses")
+    print(f"   • {Category.objects.count()} Categories")
+    print(f"   • {MenuItem.objects.count()} Menu items")
+    print(f"   • {Table.objects.count()} Tables")
+    sys.exit(0)
 
 print("\n" + "="*60)
 print("CREATING SAMPLE DATA FOR MULTI-MARKET PLATFORM")
