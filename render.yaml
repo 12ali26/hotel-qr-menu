@@ -28,4 +28,3 @@ databases:
   - name: hotel-qr-menu-db
     databaseName: hotel_qr_menu
     user: hotel_qr_menu_user
-    plan: starter
