@@ -24,7 +24,7 @@ services:
     autoDeploy: true
 
   # PostgreSQL Database
-  - type: pgsql
+  - type: postgres
     name: hotel-qr-menu-db
     plan: starter
     databaseName: hotel_qr_menu
