@@ -3,3 +3,10 @@ Pillow>=10.0.0  # For image handling
 qrcode>=7.4.0  # For QR code generation
 django-cors-headers>=4.0.0  # For API CORS support
 djangorestframework>=3.14.0  # For REST API endpoints
+
+# Production dependencies
+gunicorn>=21.2.0  # WSGI HTTP Server
+whitenoise>=6.6.0  # Static file serving
+psycopg2-binary>=2.9.9  # PostgreSQL adapter
+dj-database-url>=2.1.0  # Database URL parser
+python-dotenv>=1.0.0  # Environment variable management
