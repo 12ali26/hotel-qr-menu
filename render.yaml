@@ -23,10 +23,9 @@ services:
           property: connectionString
     autoDeploy: true
 
-  # PostgreSQL Database
-  - type: postgres
-    name: hotel-qr-menu-db
-    plan: starter
+# PostgreSQL Database
+databases:
+  - name: hotel-qr-menu-db
     databaseName: hotel_qr_menu
     user: hotel_qr_menu_user
-    ipAllowList: []
+    plan: starter
