@@ -3,7 +3,7 @@ services:
   - type: web
     name: hotel-qr-menu
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn hotel_qr_menu_project.wsgi:application"
     envVars:
