@@ -2,17 +2,50 @@ from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
 
-from .models import Category, Hotel, MenuItem, Order, OrderItem
+from .models import Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 
 
 @admin.register(Hotel)
 class HotelAdmin(admin.ModelAdmin):
-    """Admin configuration for the Hotel model."""
+    """Admin configuration for the Business model."""
 
-    list_display = ("name", "slug", "currency_code", "timezone", "is_active")
-    list_filter = ("is_active",)
+    list_display = (
+        "name",
+        "business_type",
+        "slug",
+        "currency_code",
+        "is_active",
+    )
+    list_filter = ("business_type", "is_active")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": (
+                    "name",
+                    "business_type",
+                    "slug",
+                    "currency_code",
+                    "timezone",
+                    "logo",
+                    "is_active",
+                )
+            },
+        ),
+        (
+            "Feature Settings",
+            {
+                "fields": (
+                    "enable_table_management",
+                    "enable_waiter_alerts",
+                    "enable_room_charging",
+                ),
+                "description": "Enable specific features based on your business type.",
+            },
+        ),
+    )
 
 
 class MenuItemInline(admin.TabularInline):
@@ -73,6 +106,34 @@ class OrderItemInline(admin.TabularInline):
         return False
 
 
+@admin.register(Table)
+class TableAdmin(admin.ModelAdmin):
+    """Admin configuration for the Table model."""
+
+    list_display = ("table_number", "hotel", "capacity", "status", "updated_at")
+    list_filter = ("status", "hotel")
+    search_fields = ("table_number", "hotel__name")
+    list_editable = ("status",)
+
+
+@admin.register(WaiterAlert)
+class WaiterAlertAdmin(admin.ModelAdmin):
+    """Admin configuration for the WaiterAlert model."""
+
+    list_display = (
+        "table",
+        "hotel",
+        "alert_type",
+        "status",
+        "created_at",
+        "acknowledged_at",
+    )
+    list_filter = ("status", "alert_type", "hotel")
+    search_fields = ("table__table_number", "note")
+    readonly_fields = ("created_at", "updated_at")
+    list_editable = ("status",)
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     """Admin configuration for the Order model."""
@@ -81,22 +142,60 @@ class OrderAdmin(admin.ModelAdmin):
         "id",
         "hotel",
         "room_number",
+        "table",
         "status",
+        "payment_method",
         "total_price",
         "created_at",
     )
-    list_filter = ("status", "hotel")
-    search_fields = ("id", "room_number")
+    list_filter = ("status", "payment_method", "payment_status", "hotel")
+    search_fields = ("id", "room_number", "table__table_number")
     readonly_fields = (
         "id",
         "hotel",
         "room_number",
+        "table",
+        "subtotal",
+        "tax_amount",
         "total_price",
         "items_snapshot",
         "created_at",
         "updated_at",
     )
     inlines = [OrderItemInline]
+    fieldsets = (
+        (
+            "Order Information",
+            {
+                "fields": (
+                    "id",
+                    "hotel",
+                    "room_number",
+                    "table",
+                    "status",
+                    "created_at",
+                    "updated_at",
+                )
+            },
+        ),
+        (
+            "Payment",
+            {
+                "fields": (
+                    "payment_method",
+                    "payment_status",
+                    "subtotal",
+                    "tax_amount",
+                    "tip_amount",
+                    "total_price",
+                )
+            },
+        ),
+        (
+            "Additional Information",
+            {"fields": ("special_requests", "items_snapshot")},
+        ),
+    )
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         # Orders should be created through the front-end, not the admin.
@@ -104,15 +203,15 @@ class OrderAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request: HttpRequest, obj: Order = None) -> bool:
         # Allow changing the status, but not other fields for integrity.
-        # More granular control can be achieved by overriding get_readonly_fields.
         return True
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # For existing objects
-            # All fields are readonly except for 'status'
+            # Allow editing status, payment_status, and tip_amount
+            editable_fields = ["status", "payment_status", "tip_amount"]
             return [
                 field.name
                 for field in self.model._meta.fields
-                if field.name != "status"
+                if field.name not in editable_fields
             ]
         return super().get_readonly_fields(request, obj)
