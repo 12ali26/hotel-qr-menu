@@ -11,7 +11,4 @@ python manage.py collectstatic --no-input
 echo "🗄️  Running database migrations..."
 python manage.py migrate
 
-echo "🌱 Loading sample data (if needed)..."
-python populate_sample_data.py || true
-
 echo "✅ Build completed successfully!"

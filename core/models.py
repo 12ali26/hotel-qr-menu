@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -115,6 +116,53 @@ class Hotel(models.Model):
             return "Room Service"
         else:
             return "Service"
+
+
+class BusinessOwner(models.Model):
+    """
+    Links Django User accounts to businesses they own/manage.
+    Supports multiple staff members per business with different roles.
+    """
+
+    class Role(models.TextChoices):
+        OWNER = "OWNER", _("Owner")
+        MANAGER = "MANAGER", _("Manager")
+        STAFF = "STAFF", _("Staff")
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="business_ownerships",
+        verbose_name=_("User"),
+    )
+    business = models.ForeignKey(
+        Hotel,
+        on_delete=models.CASCADE,
+        related_name="owners",
+        verbose_name=_("Business"),
+    )
+    role = models.CharField(
+        _("Role"),
+        max_length=20,
+        choices=Role.choices,
+        default=Role.OWNER,
+        help_text=_("User's role in this business."),
+    )
+    is_primary = models.BooleanField(
+        _("Is Primary Owner"),
+        default=False,
+        help_text=_("Only one primary owner per business. Has full access."),
+    )
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Business Owner")
+        verbose_name_plural = _("Business Owners")
+        unique_together = [["user", "business"]]
+        ordering = ["-is_primary", "role", "created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.business.name} ({self.get_role_display()})"
 
 
 class Category(models.Model):

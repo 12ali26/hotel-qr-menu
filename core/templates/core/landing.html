@@ -24,8 +24,8 @@
                     Customers scan, order, and pay from their phones.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                    <a href="#demo" class="bg-white text-orange-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
-                        See Live Demo
+                    <a href="{% url 'core:signup' %}" class="bg-white text-orange-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                        Start Free Trial
                     </a>
                     <a href="#pricing" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-orange-600 transition-all">
                         View Pricing
@@ -102,117 +102,42 @@
         </div>
     </section>
 
-    <!-- Live Demo Section -->
-    <section id="demo" class="py-20 bg-white dark:bg-gray-800">
+    <!-- Get Started Section -->
+    <section id="get-started" class="py-20 bg-white dark:bg-gray-800">
         <div class="container mx-auto px-4">
-            <h2 class="text-4xl font-bold text-center mb-4">Try It Yourself</h2>
-            <p class="text-xl text-center text-gray-600 dark:text-gray-400 mb-16">Click to explore our live demo businesses</p>
+            <h2 class="text-4xl font-bold text-center mb-4">Ready to Transform Your Business?</h2>
+            <p class="text-xl text-center text-gray-600 dark:text-gray-400 mb-12">Join restaurants, hotels, and cafés already using FoodConnect</p>
 
-            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <!-- Restaurant Demo -->
-                <div class="bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 border-2 border-orange-200 dark:border-orange-800">
-                    <div class="text-4xl mb-4">🍝</div>
-                    <h3 class="text-2xl font-bold mb-2">Restaurant Demo</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">Bella Italia - Italian Restaurant with 20 tables</p>
-                    <ul class="space-y-2 mb-6 text-sm">
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Table Management
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Call Waiter Button
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Split Bill
-                        </li>
-                    </ul>
-                    <div class="flex flex-col gap-2">
-                        <a href="/menu/bella-italia-doha/?location=5" target="_blank" class="bg-orange-500 text-white text-center py-3 rounded-lg font-bold hover:bg-orange-600 transition">
-                            View Menu (Table 5)
-                        </a>
-                        <a href="/kitchen/bella-italia-doha/" target="_blank" class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-center py-3 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                            Kitchen Dashboard
-                        </a>
+            <div class="max-w-4xl mx-auto bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800 rounded-2xl p-12 border-2 border-orange-200 dark:border-orange-700 text-center">
+                <div class="text-6xl mb-6">🚀</div>
+                <h3 class="text-3xl font-bold mb-4">Start Your Free 14-Day Trial</h3>
+                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">
+                    No credit card required. Setup in under 10 minutes.<br>
+                    Get your first QR code menu live today.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-10 text-left">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl">
+                        <div class="text-3xl mb-3">1️⃣</div>
+                        <h4 class="font-bold mb-2">Create Account</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Sign up with your business details in 2 minutes</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl">
+                        <div class="text-3xl mb-3">2️⃣</div>
+                        <h4 class="font-bold mb-2">Add Menu Items</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Upload your menu and customize your layout</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl">
+                        <div class="text-3xl mb-3">3️⃣</div>
+                        <h4 class="font-bold mb-2">Print QR Codes</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Download and place QR codes on your tables</p>
                     </div>
                 </div>
 
-                <!-- Hotel Demo -->
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 border-2 border-blue-200 dark:border-blue-800">
-                    <div class="text-4xl mb-4">🏨</div>
-                    <h3 class="text-2xl font-bold mb-2">Hotel Demo</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">Grand Plaza - Luxury Hotel</p>
-                    <ul class="space-y-2 mb-6 text-sm">
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Room Service
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Charge to Room
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Guest Profiles
-                        </li>
-                    </ul>
-                    <div class="flex flex-col gap-2">
-                        <a href="/menu/grand-plaza-doha/?location=305" target="_blank" class="bg-blue-500 text-white text-center py-3 rounded-lg font-bold hover:bg-blue-600 transition">
-                            View Menu (Room 305)
-                        </a>
-                        <a href="/kitchen/grand-plaza-doha/" target="_blank" class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-center py-3 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                            Kitchen Dashboard
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Café Demo -->
-                <div class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 border-2 border-amber-200 dark:border-amber-800">
-                    <div class="text-4xl mb-4">☕</div>
-                    <h3 class="text-2xl font-bold mb-2">Café Demo</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">Morning Brew - Cozy Café</p>
-                    <ul class="space-y-2 mb-6 text-sm">
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Quick Service
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Table Ordering
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Takeaway Ready
-                        </li>
-                    </ul>
-                    <div class="flex flex-col gap-2">
-                        <a href="/menu/morning-brew-cafe/?location=3" target="_blank" class="bg-amber-500 text-white text-center py-3 rounded-lg font-bold hover:bg-amber-600 transition">
-                            View Menu (Table 3)
-                        </a>
-                        <a href="/kitchen/morning-brew-cafe/" target="_blank" class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-center py-3 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                            Kitchen Dashboard
-                        </a>
-                    </div>
-                </div>
+                <a href="{% url 'core:signup' %}" class="inline-block bg-orange-500 text-white px-12 py-5 rounded-lg font-bold text-xl hover:bg-orange-600 transition-all transform hover:scale-105 shadow-lg">
+                    Get Started Free
+                </a>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">Already have an account? <a href="{% url 'core:login' %}" class="text-orange-600 dark:text-orange-400 font-bold hover:underline">Sign in</a></p>
             </div>
         </div>
     </section>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - FoodConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-4xl font-extrabold text-gray-900 dark:text-white">
+                    Sign In
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Access your business dashboard
+                </p>
+            </div>
+
+            {% if messages %}
+                <div class="space-y-2">
+                    {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form class="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg" method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Email Address
+                        </label>
+                        <input type="email" name="email" id="email" required autofocus
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Password
+                        </label>
+                        <input type="password" name="password" id="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition">
+                        Sign In
+                    </button>
+                </div>
+
+                <div class="text-center text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Don't have an account?</span>
+                    <a href="{% url 'core:signup' %}" class="font-medium text-orange-600 dark:text-orange-400 hover:text-orange-500">
+                        Sign up free
+                    </a>
+                </div>
+            </form>
+
+            <div class="text-center">
+                <a href="{% url 'core:landing' %}" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    ← Back to home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

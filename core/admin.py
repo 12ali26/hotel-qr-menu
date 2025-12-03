@@ -2,7 +2,17 @@ from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
 
-from .models import Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
+from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
+
+
+@admin.register(BusinessOwner)
+class BusinessOwnerAdmin(admin.ModelAdmin):
+    """Admin configuration for the BusinessOwner model."""
+
+    list_display = ("user", "business", "role", "is_primary", "created_at")
+    list_filter = ("role", "is_primary")
+    search_fields = ("user__username", "user__email", "business__name")
+    raw_id_fields = ("user", "business")
 
 
 @admin.register(Hotel)

@@ -1,12 +1,18 @@
 import json
 from decimal import Decimal
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.text import slugify
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .models import Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
+from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 
 
 def landing_page(request):
@@ -208,3 +214,181 @@ def download_qr_codes(request, slug: str):
     }
 
     return render(request, "core/download_qr_codes.html", context)
+
+
+def signup_view(request):
+    """
+    Business owner signup form.
+    Creates a user account and their first business in one step.
+    """
+    if request.user.is_authenticated:
+        return redirect("core:dashboard")
+
+    if request.method == "POST":
+        # Get form data
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password")
+        password_confirm = request.POST.get("password_confirm")
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        business_name = request.POST.get("business_name", "").strip()
+        business_type = request.POST.get("business_type", "RESTAURANT")
+        phone = request.POST.get("phone", "").strip()
+
+        # Validation
+        errors = []
+        if not email or not password or not business_name:
+            errors.append("Email, password, and business name are required.")
+        if password != password_confirm:
+            errors.append("Passwords do not match.")
+        if User.objects.filter(username=email).exists():
+            errors.append("An account with this email already exists.")
+        if User.objects.filter(email=email).exists():
+            errors.append("An account with this email already exists.")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, "core/signup.html", {"post_data": request.POST})
+
+        # Create user and business in a transaction
+        try:
+            with transaction.atomic():
+                # Create user
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+
+                # Create business
+                base_slug = slugify(business_name)
+                slug = base_slug
+                counter = 1
+                while Hotel.objects.filter(slug=slug).exists():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+
+                business = Hotel.objects.create(
+                    name=business_name,
+                    business_type=business_type,
+                    slug=slug,
+                    currency_code="QAR",
+                    timezone="Asia/Qatar",
+                    is_active=True,
+                    enable_table_management=(business_type in ["RESTAURANT", "CAFE"]),
+                    enable_waiter_alerts=(business_type in ["RESTAURANT", "CAFE"]),
+                    enable_room_charging=(business_type == "HOTEL"),
+                )
+
+                # Link user to business
+                BusinessOwner.objects.create(
+                    user=user,
+                    business=business,
+                    role=BusinessOwner.Role.OWNER,
+                    is_primary=True,
+                )
+
+                # Log the user in
+                login(request, user)
+                messages.success(
+                    request,
+                    f"Welcome! Your account has been created. Let's set up your menu.",
+                )
+                return redirect("core:onboarding")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return render(request, "core/signup.html", {"post_data": request.POST})
+
+    return render(request, "core/signup.html")
+
+
+def login_view(request):
+    """
+    Business owner login form.
+    """
+    if request.user.is_authenticated:
+        return redirect("core:dashboard")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, f"Welcome back, {user.first_name or user.username}!")
+            return redirect("core:dashboard")
+        else:
+            messages.error(request, "Invalid email or password.")
+
+    return render(request, "core/login.html")
+
+
+def logout_view(request):
+    """
+    Log out the current user.
+    """
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect("core:landing")
+
+
+@login_required
+def dashboard(request):
+    """
+    Business owner dashboard.
+    Shows overview of their business, orders, and quick actions.
+    """
+    # Get user's businesses
+    ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+
+    if not ownerships.exists():
+        messages.warning(request, "You don't have any businesses set up yet.")
+        return redirect("core:signup")
+
+    # For now, use the first business (later we can add business switcher)
+    ownership = ownerships.first()
+    business = ownership.business
+
+    # Get recent orders
+    recent_orders = Order.objects.filter(hotel=business).order_by("-created_at")[:10]
+
+    # Get stats
+    total_orders = Order.objects.filter(hotel=business).count()
+    pending_orders = Order.objects.filter(
+        hotel=business, status=Order.OrderStatus.PENDING
+    ).count()
+
+    context = {
+        "business": business,
+        "ownership": ownership,
+        "recent_orders": recent_orders,
+        "total_orders": total_orders,
+        "pending_orders": pending_orders,
+    }
+
+    return render(request, "core/dashboard.html", context)
+
+
+@login_required
+def onboarding(request):
+    """
+    Onboarding wizard for new business owners.
+    Guides them through menu setup and QR code generation.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+
+    context = {
+        "business": business,
+        "ownership": ownership,
+    }
+
+    return render(request, "core/onboarding.html", context)

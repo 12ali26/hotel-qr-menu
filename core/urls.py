@@ -7,6 +7,13 @@ app_name = "core"
 urlpatterns = [
     # Landing page
     path("", views.landing_page, name="landing"),
+    # Authentication
+    path("signup/", views.signup_view, name="signup"),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    # Business owner dashboard
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("onboarding/", views.onboarding, name="onboarding"),
     # Customer-facing menu
     path("menu/<slug:slug>/", views.hotel_menu, name="hotel_menu"),
     # API endpoints
