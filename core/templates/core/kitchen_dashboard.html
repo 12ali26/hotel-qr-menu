@@ -6,11 +6,25 @@
     <title>{{ hotel.name }} - Kitchen Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <meta http-equiv="refresh" content="30">
+    <style>
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s infinite;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
 
-    <div class="container mx-auto p-4" x-data="kitchenApp()">
+    <!-- Hidden audio for notification sound -->
+    <audio id="notification-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjGH0fPTgjMGHm7A7+OZURE=" type="audio/wav">
+    </audio>
+
+    <div class="container mx-auto p-4" x-data="kitchenApp()" x-init="checkForNewOrders()">
         <!-- Header -->
         <header class="mb-8">
             <div class="flex justify-between items-center">
@@ -282,6 +296,65 @@
                         }
                     }
                     return cookieValue;
+                },
+
+                checkForNewOrders() {
+                    // Store initial order count
+                    const newOrdersSection = document.querySelectorAll('[data-status="PENDING"]');
+                    let lastOrderCount = newOrdersSection.length;
+
+                    // Set up localStorage to persist across page refreshes
+                    const stored = localStorage.getItem('lastOrderCount');
+                    if (stored) {
+                        lastOrderCount = parseInt(stored);
+                    }
+
+                    // Check for new orders every 10 seconds (separate from page refresh)
+                    setInterval(() => {
+                        const currentOrderCount = document.querySelectorAll('[data-status="PENDING"]').length;
+
+                        if (currentOrderCount > lastOrderCount) {
+                            // New order detected!
+                            this.playNotificationSound();
+                            this.showBrowserNotification(currentOrderCount - lastOrderCount);
+                            lastOrderCount = currentOrderCount;
+                            localStorage.setItem('lastOrderCount', currentOrderCount);
+                        }
+                    }, 10000);
+
+                    // Initial store
+                    localStorage.setItem('lastOrderCount', lastOrderCount);
+                },
+
+                playNotificationSound() {
+                    try {
+                        const audio = document.getElementById('notification-sound');
+                        if (audio) {
+                            audio.play().catch(e => console.log('Audio play failed:', e));
+                        }
+                    } catch (error) {
+                        console.log('Sound notification failed:', error);
+                    }
+                },
+
+                showBrowserNotification(count) {
+                    // Request permission for browser notifications
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('🔔 New Order!', {
+                            body: `${count} new order(s) received`,
+                            icon: '/static/icon.png',
+                            tag: 'new-order',
+                            requireInteraction: true
+                        });
+                    } else if ('Notification' in window && Notification.permission !== 'denied') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                new Notification('🔔 New Order!', {
+                                    body: `${count} new order(s) received`,
+                                });
+                            }
+                        });
+                    }
                 }
             }
         }

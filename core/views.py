@@ -9,6 +9,13 @@ from django.views.decorators.http import require_http_methods
 from .models import Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 
 
+def landing_page(request):
+    """
+    Landing page for the platform.
+    """
+    return render(request, "core/landing.html")
+
+
 def hotel_menu(request, slug: str):
     """
     Displays the public menu for a specific business (hotel/restaurant).
@@ -183,3 +190,21 @@ def kitchen_dashboard(request, slug: str):
     }
 
     return render(request, "core/kitchen_dashboard.html", context)
+
+
+def download_qr_codes(request, slug: str):
+    """
+    View to download all QR codes for a business.
+    Returns an HTML page with all QR codes for easy printing.
+    """
+    hotel = get_object_or_404(Hotel, slug=slug)
+
+    # Get all tables with QR codes
+    tables = Table.objects.filter(hotel=hotel).exclude(qr_code='').order_by('table_number')
+
+    context = {
+        "hotel": hotel,
+        "tables": tables,
+    }
+
+    return render(request, "core/download_qr_codes.html", context)
