@@ -392,3 +392,226 @@ def onboarding(request):
     }
 
     return render(request, "core/onboarding.html", context)
+
+
+@login_required
+def menu_management(request):
+    """
+    Menu management page - view all categories and menu items.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+
+    # Get all categories with their menu items
+    categories = Category.objects.filter(hotel=business).prefetch_related("menuitem_set").order_by("sort_order")
+
+    context = {
+        "business": business,
+        "ownership": ownership,
+        "categories": categories,
+    }
+
+    return render(request, "core/menu_management.html", context)
+
+
+@login_required
+def add_category(request):
+    """
+    Add a new category.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        sort_order = request.POST.get("sort_order", 0)
+
+        if name:
+            Category.objects.create(
+                hotel=business,
+                name=name,
+                sort_order=sort_order or 0,
+            )
+            messages.success(request, f"Category '{name}' created successfully!")
+            return redirect("core:menu_management")
+        else:
+            messages.error(request, "Category name is required.")
+
+    return render(request, "core/add_category.html", {"business": business})
+
+
+@login_required
+def add_menu_item(request, category_id=None):
+    """
+    Add a new menu item.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+    categories = Category.objects.filter(hotel=business).order_by("sort_order")
+
+    if request.method == "POST":
+        category_id = request.POST.get("category")
+        name = request.POST.get("name", "").strip()
+        description = request.POST.get("description", "").strip()
+        price = request.POST.get("price")
+        is_available = request.POST.get("is_available") == "on"
+        is_vegetarian = request.POST.get("is_vegetarian") == "on"
+        is_vegan = request.POST.get("is_vegan") == "on"
+        is_gluten_free = request.POST.get("is_gluten_free") == "on"
+
+        if category_id and name and price:
+            try:
+                category = Category.objects.get(id=category_id, hotel=business)
+                MenuItem.objects.create(
+                    category=category,
+                    name=name,
+                    description=description,
+                    price=Decimal(price),
+                    is_available=is_available,
+                    is_vegetarian=is_vegetarian,
+                    is_vegan=is_vegan,
+                    is_gluten_free=is_gluten_free,
+                )
+                messages.success(request, f"Menu item '{name}' added successfully!")
+                return redirect("core:menu_management")
+            except (Category.DoesNotExist, ValueError) as e:
+                messages.error(request, f"Error adding menu item: {str(e)}")
+        else:
+            messages.error(request, "Category, name, and price are required.")
+
+    selected_category = None
+    if category_id:
+        selected_category = categories.filter(id=category_id).first()
+
+    context = {
+        "business": business,
+        "categories": categories,
+        "selected_category": selected_category,
+    }
+
+    return render(request, "core/add_menu_item.html", context)
+
+
+@login_required
+def edit_menu_item(request, item_id):
+    """
+    Edit an existing menu item.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+    menu_item = get_object_or_404(MenuItem, id=item_id, category__hotel=business)
+
+    if request.method == "POST":
+        menu_item.name = request.POST.get("name", "").strip()
+        menu_item.description = request.POST.get("description", "").strip()
+        menu_item.price = Decimal(request.POST.get("price", "0"))
+        menu_item.is_available = request.POST.get("is_available") == "on"
+        menu_item.is_vegetarian = request.POST.get("is_vegetarian") == "on"
+        menu_item.is_vegan = request.POST.get("is_vegan") == "on"
+        menu_item.is_gluten_free = request.POST.get("is_gluten_free") == "on"
+        menu_item.save()
+
+        messages.success(request, f"Menu item '{menu_item.name}' updated successfully!")
+        return redirect("core:menu_management")
+
+    context = {
+        "business": business,
+        "menu_item": menu_item,
+    }
+
+    return render(request, "core/edit_menu_item.html", context)
+
+
+@login_required
+def delete_menu_item(request, item_id):
+    """
+    Delete a menu item.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+    menu_item = get_object_or_404(MenuItem, id=item_id, category__hotel=business)
+
+    if request.method == "POST":
+        name = menu_item.name
+        menu_item.delete()
+        messages.success(request, f"Menu item '{name}' deleted successfully!")
+        return redirect("core:menu_management")
+
+    context = {
+        "business": business,
+        "menu_item": menu_item,
+    }
+
+    return render(request, "core/delete_menu_item.html", context)
+
+
+@login_required
+def table_management(request):
+    """
+    Table management page - view all tables.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+
+    if not business.enable_table_management:
+        messages.warning(request, "Table management is not enabled for your business type.")
+        return redirect("core:dashboard")
+
+    tables = Table.objects.filter(hotel=business).order_by("table_number")
+
+    context = {
+        "business": business,
+        "ownership": ownership,
+        "tables": tables,
+    }
+
+    return render(request, "core/table_management.html", context)
+
+
+@login_required
+def add_table(request):
+    """
+    Add a new table.
+    """
+    ownership = BusinessOwner.objects.filter(user=request.user).first()
+    if not ownership:
+        return redirect("core:signup")
+
+    business = ownership.business
+
+    if request.method == "POST":
+        table_number = request.POST.get("table_number", "").strip()
+        capacity = request.POST.get("capacity", 4)
+
+        if table_number:
+            Table.objects.create(
+                hotel=business,
+                table_number=table_number,
+                capacity=capacity,
+                status=Table.TableStatus.AVAILABLE,
+            )
+            messages.success(request, f"Table {table_number} created successfully!")
+            return redirect("core:table_management")
+        else:
+            messages.error(request, "Table number is required.")
+
+    context = {"business": business}
+    return render(request, "core/add_table.html", context)

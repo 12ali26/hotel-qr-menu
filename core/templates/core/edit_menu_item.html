@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Menu Item - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen py-12 px-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="mb-6">
+                <a href="{% url 'core:menu_management' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900">
+                    ← Back to Menu
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit: {{ menu_item.name }}</h2>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Item Name *
+                            </label>
+                            <input type="text" name="name" id="name" required
+                                   value="{{ menu_item.name }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        </div>
+
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Description
+                            </label>
+                            <textarea name="description" id="description" rows="3"
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">{{ menu_item.description }}</textarea>
+                        </div>
+
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Price ({{ business.currency_code }}) *
+                            </label>
+                            <input type="number" name="price" id="price" required step="0.01" min="0"
+                                   value="{{ menu_item.price }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_available" {% if menu_item.is_available %}checked{% endif %} class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Available</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_vegetarian" {% if menu_item.is_vegetarian %}checked{% endif %} class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegetarian</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_vegan" {% if menu_item.is_vegan %}checked{% endif %} class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegan</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_gluten_free" {% if menu_item.is_gluten_free %}checked{% endif %} class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Gluten-Free</span>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 bg-orange-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                                Save Changes
+                            </button>
+                            <a href="{% url 'core:menu_management' %}" class="flex-1 bg-gray-200 text-gray-800 px-4 py-3 rounded-lg font-medium hover:bg-gray-300 transition text-center">
+                                Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

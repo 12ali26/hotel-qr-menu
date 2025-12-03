@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Management - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:dashboard' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        ← Back to Dashboard
+                    </a>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'core:add_category' %}" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+                        + Add Category
+                    </a>
+                    <a href="{% url 'core:add_menu_item' %}" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition">
+                        + Add Menu Item
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded relative mb-4">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if categories %}
+            {% for category in categories %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <!-- Category Header -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ category.name }}</h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ category.menuitem_set.count }} item(s)</p>
+                    </div>
+                    <a href="{% url 'core:add_menu_item_to_category' category.id %}" class="text-orange-600 hover:text-orange-700 text-sm font-medium">
+                        + Add item to this category
+                    </a>
+                </div>
+
+                <!-- Menu Items -->
+                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for item in category.menuitem_set.all %}
+                    <div class="px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ item.name }}</h3>
+                                {% if not item.is_available %}
+                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded">
+                                    Unavailable
+                                </span>
+                                {% endif %}
+                                {% if item.is_vegetarian %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                                    🌱 Vegetarian
+                                </span>
+                                {% endif %}
+                                {% if item.is_vegan %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                                    🌿 Vegan
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ item.description|truncatewords:20 }}</p>
+                            <p class="text-lg font-bold text-orange-600 dark:text-orange-400 mt-2">
+                                {{ business.currency_code }} {{ item.price }}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'core:edit_menu_item' item.id %}" class="text-blue-600 hover:text-blue-700 px-3 py-1 border border-blue-600 rounded text-sm font-medium">
+                                Edit
+                            </a>
+                            <a href="{% url 'core:delete_menu_item' item.id %}" class="text-red-600 hover:text-red-700 px-3 py-1 border border-red-600 rounded text-sm font-medium">
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                        No items in this category yet.
+                        <a href="{% url 'core:add_menu_item_to_category' category.id %}" class="text-orange-600 hover:underline">Add one now</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No categories yet</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Get started by creating your first category.</p>
+                <div class="mt-6">
+                    <a href="{% url 'core:add_category' %}" class="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                        Create First Category
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

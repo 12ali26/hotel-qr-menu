@@ -14,6 +14,16 @@ urlpatterns = [
     # Business owner dashboard
     path("dashboard/", views.dashboard, name="dashboard"),
     path("onboarding/", views.onboarding, name="onboarding"),
+    # Menu management
+    path("menu-management/", views.menu_management, name="menu_management"),
+    path("menu-management/add-category/", views.add_category, name="add_category"),
+    path("menu-management/add-item/", views.add_menu_item, name="add_menu_item"),
+    path("menu-management/add-item/<int:category_id>/", views.add_menu_item, name="add_menu_item_to_category"),
+    path("menu-management/edit-item/<int:item_id>/", views.edit_menu_item, name="edit_menu_item"),
+    path("menu-management/delete-item/<int:item_id>/", views.delete_menu_item, name="delete_menu_item"),
+    # Table management
+    path("table-management/", views.table_management, name="table_management"),
+    path("table-management/add/", views.add_table, name="add_table"),
     # Customer-facing menu
     path("menu/<slug:slug>/", views.hotel_menu, name="hotel_menu"),
     # API endpoints

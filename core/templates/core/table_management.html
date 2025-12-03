@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Management - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:dashboard' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        ← Back to Dashboard
+                    </a>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ business.get_location_label }} Management</h1>
+                </div>
+                <div class="flex items-center">
+                    <a href="{% url 'core:add_table' %}" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition">
+                        + Add {{ business.get_location_label }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded relative mb-4">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if tables %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ business.get_location_label }} Number</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Capacity</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">QR Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for table in tables %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ table.table_number }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                    {{ table.capacity }} guests
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                        {% if table.status == 'AVAILABLE' %}bg-green-100 text-green-800
+                                        {% elif table.status == 'OCCUPIED' %}bg-red-100 text-red-800
+                                        {% elif table.status == 'RESERVED' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ table.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                    {% if table.qr_code %}
+                                        <span class="text-green-600">✓ Generated</span>
+                                    {% else %}
+                                        <span class="text-gray-400">Not generated</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                    {{ table.updated_at|timesince }} ago
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    💡 <strong>Next step:</strong> Generate QR codes for your tables.
+                    <a href="{% url 'core:download_qr_codes' business.slug %}" target="_blank" class="font-bold underline">
+                        Generate QR Codes →
+                    </a>
+                </p>
+            </div>
+        {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No {{ business.get_location_label|lower }}s yet</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Get started by adding your first {{ business.get_location_label|lower }}.</p>
+                <div class="mt-6">
+                    <a href="{% url 'core:add_table' %}" class="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                        Add First {{ business.get_location_label }}
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
