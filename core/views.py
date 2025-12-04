@@ -1,4 +1,6 @@
 import json
+import logging
+import traceback
 from decimal import Decimal
 
 from django.contrib import messages
@@ -14,6 +16,8 @@ from django.views.decorators.http import require_http_methods
 
 from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 
+logger = logging.getLogger(__name__)
+
 
 def get_current_business(request):
     """
@@ -21,32 +25,54 @@ def get_current_business(request):
     Supports multi-business accounts with session-based switching.
     Returns (business, ownership) tuple or (None, None) if no business found.
     """
-    if not request.user.is_authenticated:
-        return None, None
+    try:
+        logger.debug(f"get_current_business called for user: {request.user}")
 
-    # Get all businesses this user owns/manages
-    ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+        if not request.user.is_authenticated:
+            logger.debug("User not authenticated")
+            return None, None
 
-    if not ownerships.exists():
-        return None, None
+        # Get all businesses this user owns/manages
+        logger.debug("Fetching BusinessOwner records...")
+        ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+        ownership_count = ownerships.count()
+        logger.debug(f"Found {ownership_count} BusinessOwner records for user {request.user.username}")
 
-    # Check if user has selected a specific business
-    selected_business_id = request.session.get("selected_business_id")
+        if not ownerships.exists():
+            logger.warning(f"No BusinessOwner records found for user {request.user.username}")
+            return None, None
 
-    if selected_business_id:
-        # Try to get the selected business
-        ownership = ownerships.filter(business_id=selected_business_id).first()
+        # Check if user has selected a specific business
+        selected_business_id = request.session.get("selected_business_id")
+        logger.debug(f"Session selected_business_id: {selected_business_id}")
+
+        if selected_business_id:
+            # Try to get the selected business
+            logger.debug(f"Looking for ownership with business_id={selected_business_id}")
+            ownership = ownerships.filter(business_id=selected_business_id).first()
+            if ownership:
+                logger.debug(f"Found selected business: {ownership.business.name} (id={ownership.business.id})")
+                return ownership.business, ownership
+            else:
+                logger.warning(f"Could not find business_id={selected_business_id} in user's ownerships")
+
+        # Default to first business (or primary owner if exists)
+        logger.debug("Looking for primary ownership or first ownership...")
+        ownership = ownerships.filter(is_primary=True).first() or ownerships.first()
+
+        # Store in session for next time
         if ownership:
+            logger.debug(f"Using business: {ownership.business.name} (id={ownership.business.id})")
+            request.session["selected_business_id"] = ownership.business.id
             return ownership.business, ownership
 
-    # Default to first business (or primary owner if exists)
-    ownership = ownerships.filter(is_primary=True).first() or ownerships.first()
+        logger.warning("No ownership found (should not happen if ownerships.exists() was True)")
+        return None, None
 
-    # Store in session for next time
-    if ownership:
-        request.session["selected_business_id"] = ownership.business.id
-
-    return (ownership.business, ownership) if ownership else (None, None)
+    except Exception as e:
+        logger.error(f"ERROR in get_current_business: {type(e).__name__}: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
 
 
 def landing_page(request):
@@ -431,26 +457,53 @@ def menu_management(request):
     """
     Menu management page - view all categories and menu items.
     """
-    business, ownership = get_current_business(request)
+    try:
+        logger.info(f"menu_management called by user: {request.user.username} (id={request.user.id})")
 
-    if not business:
-        messages.warning(request, "Please create a business first.")
-        return redirect("core:signup")
+        # Get current business
+        logger.info("Calling get_current_business...")
+        business, ownership = get_current_business(request)
+        logger.info(f"get_current_business returned: business={business}, ownership={ownership}")
 
-    # Get all categories with their menu items
-    categories = Category.objects.filter(hotel=business).prefetch_related("menuitem_set").order_by("sort_order")
+        if not business:
+            logger.warning(f"No business found for user {request.user.username}")
+            messages.warning(request, "Please create a business first.")
+            return redirect("core:signup")
 
-    # Get all user's businesses for the switcher
-    all_ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+        logger.info(f"Working with business: {business.name} (id={business.id})")
 
-    context = {
-        "business": business,
-        "ownership": ownership,
-        "all_ownerships": all_ownerships,
-        "categories": categories,
-    }
+        # Get all categories with their menu items
+        logger.info("Fetching categories...")
+        categories = Category.objects.filter(hotel=business).prefetch_related("menuitem_set").order_by("sort_order")
+        logger.info(f"Found {categories.count()} categories")
 
-    return render(request, "core/menu_management.html", context)
+        # Get all user's businesses for the switcher
+        logger.info("Fetching all ownerships...")
+        all_ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+        logger.info(f"Found {all_ownerships.count()} ownerships")
+
+        context = {
+            "business": business,
+            "ownership": ownership,
+            "all_ownerships": all_ownerships,
+            "categories": categories,
+        }
+
+        logger.info("Rendering template...")
+        return render(request, "core/menu_management.html", context)
+
+    except Exception as e:
+        logger.error("=" * 80)
+        logger.error(f"ERROR in menu_management view!")
+        logger.error(f"User: {request.user.username} (id={request.user.id})")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Full traceback:")
+        logger.error(traceback.format_exc())
+        logger.error("=" * 80)
+
+        # Re-raise to get Django's normal error handling
+        raise
 
 
 @login_required
