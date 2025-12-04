@@ -29,7 +29,7 @@
         <header class="mb-8">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">🍽️ {{ hotel.name }}</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ hotel.name }}</h1>
                     <p class="text-gray-600 dark:text-gray-400">Kitchen Dashboard</p>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -37,7 +37,7 @@
                         <span class="font-semibold">Auto-refresh: 30s</span>
                     </div>
                     <button @click="location.reload()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                        🔄 Refresh Now
+                        Refresh Now
                     </button>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                     <p class="text-sm text-gray-600 dark:text-gray-400 italic">{{ alert.note }}</p>
                     {% endif %}
                     <button @click="acknowledgeAlert({{ alert.id }})" class="mt-3 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold">
-                        ✓ Acknowledge
+                        Acknowledge
                     </button>
                 </div>
                 {% endfor %}
@@ -80,7 +80,7 @@
             <!-- NEW ORDERS -->
             <section>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
-                    🔴 NEW ORDERS
+                    NEW ORDERS
                 </h2>
                 <div class="space-y-4">
                     {% for order in orders %}
@@ -133,7 +133,7 @@
             <!-- PREPARING -->
             <section>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-amber-100 dark:bg-amber-900/30 p-3 rounded-lg">
-                    🟡 PREPARING
+                    PREPARING
                 </h2>
                 <div class="space-y-4">
                     {% for order in orders %}
@@ -145,7 +145,7 @@
                                         {{ hotel.get_location_label }} {{ order.room_number }}
                                     </h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                                        ⏱️ Started {{ order.updated_at|timesince }} ago
+                                        Started {{ order.updated_at|timesince }} ago
                                     </p>
                                 </div>
                                 <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -174,7 +174,7 @@
             <!-- READY / DELIVERED -->
             <section>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-green-100 dark:bg-green-900/30 p-3 rounded-lg">
-                    🟢 READY / DELIVERING
+                    READY / DELIVERING
                 </h2>
                 <div class="space-y-4">
                     {% for order in orders %}
@@ -340,7 +340,7 @@
                 showBrowserNotification(count) {
                     // Request permission for browser notifications
                     if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification('🔔 New Order!', {
+                        new Notification('New Order!', {
                             body: `${count} new order(s) received`,
                             icon: '/static/icon.png',
                             tag: 'new-order',
@@ -349,7 +349,7 @@
                     } else if ('Notification' in window && Notification.permission !== 'denied') {
                         Notification.requestPermission().then(permission => {
                             if (permission === 'granted') {
-                                new Notification('🔔 New Order!', {
+                                new Notification('New Order!', {
                                     body: `${count} new order(s) received`,
                                 });
                             }

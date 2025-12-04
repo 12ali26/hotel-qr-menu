@@ -15,6 +15,40 @@ from django.views.decorators.http import require_http_methods
 from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 
 
+def get_current_business(request):
+    """
+    Get the current business for the logged-in user.
+    Supports multi-business accounts with session-based switching.
+    Returns (business, ownership) tuple or (None, None) if no business found.
+    """
+    if not request.user.is_authenticated:
+        return None, None
+
+    # Get all businesses this user owns/manages
+    ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+
+    if not ownerships.exists():
+        return None, None
+
+    # Check if user has selected a specific business
+    selected_business_id = request.session.get("selected_business_id")
+
+    if selected_business_id:
+        # Try to get the selected business
+        ownership = ownerships.filter(business_id=selected_business_id).first()
+        if ownership:
+            return ownership.business, ownership
+
+    # Default to first business (or primary owner if exists)
+    ownership = ownerships.filter(is_primary=True).first() or ownerships.first()
+
+    # Store in session for next time
+    if ownership:
+        request.session["selected_business_id"] = ownership.business.id
+
+    return (ownership.business, ownership) if ownership else (None, None)
+
+
 def landing_page(request):
     """
     Landing page for the platform.
@@ -343,16 +377,14 @@ def dashboard(request):
     Business owner dashboard.
     Shows overview of their business, orders, and quick actions.
     """
-    # Get user's businesses
-    ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+    business, ownership = get_current_business(request)
 
-    if not ownerships.exists():
+    if not business:
         messages.warning(request, "You don't have any businesses set up yet.")
         return redirect("core:signup")
 
-    # For now, use the first business (later we can add business switcher)
-    ownership = ownerships.first()
-    business = ownership.business
+    # Get all user's businesses for the switcher
+    all_ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
 
     # Get recent orders
     recent_orders = Order.objects.filter(hotel=business).order_by("-created_at")[:10]
@@ -366,6 +398,7 @@ def dashboard(request):
     context = {
         "business": business,
         "ownership": ownership,
+        "all_ownerships": all_ownerships,
         "recent_orders": recent_orders,
         "total_orders": total_orders,
         "pending_orders": pending_orders,
@@ -380,11 +413,10 @@ def onboarding(request):
     Onboarding wizard for new business owners.
     Guides them through menu setup and QR code generation.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
-        return redirect("core:signup")
+    business, ownership = get_current_business(request)
 
-    business = ownership.business
+    if not business:
+        return redirect("core:signup")
 
     context = {
         "business": business,
@@ -399,18 +431,22 @@ def menu_management(request):
     """
     Menu management page - view all categories and menu items.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
-        return redirect("core:signup")
+    business, ownership = get_current_business(request)
 
-    business = ownership.business
+    if not business:
+        messages.warning(request, "Please create a business first.")
+        return redirect("core:signup")
 
     # Get all categories with their menu items
     categories = Category.objects.filter(hotel=business).prefetch_related("menuitem_set").order_by("sort_order")
 
+    # Get all user's businesses for the switcher
+    all_ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+
     context = {
         "business": business,
         "ownership": ownership,
+        "all_ownerships": all_ownerships,
         "categories": categories,
     }
 
@@ -422,11 +458,9 @@ def add_category(request):
     """
     Add a new category.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
 
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
@@ -451,11 +485,9 @@ def add_menu_item(request, category_id=None):
     """
     Add a new menu item.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
     categories = Category.objects.filter(hotel=business).order_by("sort_order")
 
     if request.method == "POST":
@@ -506,11 +538,9 @@ def edit_menu_item(request, item_id):
     """
     Edit an existing menu item.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
     menu_item = get_object_or_404(MenuItem, id=item_id, category__hotel=business)
 
     if request.method == "POST":
@@ -539,11 +569,9 @@ def delete_menu_item(request, item_id):
     """
     Delete a menu item.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
     menu_item = get_object_or_404(MenuItem, id=item_id, category__hotel=business)
 
     if request.method == "POST":
@@ -565,11 +593,9 @@ def table_management(request):
     """
     Table management page - view all tables.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
 
     if not business.enable_table_management:
         messages.warning(request, "Table management is not enabled for your business type.")
@@ -591,11 +617,9 @@ def add_table(request):
     """
     Add a new table.
     """
-    ownership = BusinessOwner.objects.filter(user=request.user).first()
-    if not ownership:
+    business, ownership = get_current_business(request)
+    if not business:
         return redirect("core:signup")
-
-    business = ownership.business
 
     if request.method == "POST":
         table_number = request.POST.get("table_number", "").strip()
@@ -615,3 +639,79 @@ def add_table(request):
 
     context = {"business": business}
     return render(request, "core/add_table.html", context)
+
+
+@login_required
+def switch_business(request, business_id):
+    """
+    Switch to a different business owned by the user.
+    """
+    # Verify user owns this business
+    ownership = BusinessOwner.objects.filter(
+        user=request.user,
+        business_id=business_id
+    ).select_related("business").first()
+
+    if ownership:
+        request.session["selected_business_id"] = business_id
+        messages.success(request, f"Switched to {ownership.business.name}")
+    else:
+        messages.error(request, "You don't have access to that business.")
+
+    return redirect("core:dashboard")
+
+
+@login_required
+def add_business(request):
+    """
+    Add a new business to the user's account.
+    """
+    if request.method == "POST":
+        business_name = request.POST.get("business_name", "").strip()
+        business_type = request.POST.get("business_type", "RESTAURANT")
+
+        if not business_name:
+            messages.error(request, "Business name is required.")
+            return render(request, "core/add_business.html")
+
+        try:
+            with transaction.atomic():
+                # Create business
+                base_slug = slugify(business_name)
+                slug = base_slug
+                counter = 1
+                while Hotel.objects.filter(slug=slug).exists():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+
+                business = Hotel.objects.create(
+                    name=business_name,
+                    business_type=business_type,
+                    slug=slug,
+                    currency_code="QAR",
+                    timezone="Asia/Qatar",
+                    is_active=True,
+                    enable_table_management=(business_type in ["RESTAURANT", "CAFE"]),
+                    enable_waiter_alerts=(business_type in ["RESTAURANT", "CAFE"]),
+                    enable_room_charging=(business_type == "HOTEL"),
+                )
+
+                # Link user to business
+                BusinessOwner.objects.create(
+                    user=request.user,
+                    business=business,
+                    role=BusinessOwner.Role.OWNER,
+                    is_primary=False,  # Not primary since they already have a business
+                )
+
+                # Switch to the new business
+                request.session["selected_business_id"] = business.id
+
+                messages.success(request, f"Business '{business_name}' created successfully!")
+                return redirect("core:onboarding")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return render(request, "core/add_business.html")
+
+    return render(request, "core/add_business.html")

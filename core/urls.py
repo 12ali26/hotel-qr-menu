@@ -14,6 +14,8 @@ urlpatterns = [
     # Business owner dashboard
     path("dashboard/", views.dashboard, name="dashboard"),
     path("onboarding/", views.onboarding, name="onboarding"),
+    path("switch-business/<int:business_id>/", views.switch_business, name="switch_business"),
+    path("add-business/", views.add_business, name="add_business"),
     # Menu management
     path("menu-management/", views.menu_management, name="menu_management"),
     path("menu-management/add-category/", views.add_category, name="add_category"),

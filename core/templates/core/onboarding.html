@@ -11,7 +11,7 @@
         <div class="max-w-4xl w-full">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
-                    🎉 Welcome to FoodConnect!
+                    Welcome to FoodConnect!
                 </h1>
                 <p class="text-xl text-gray-600 dark:text-gray-400">
                     Your business "<strong>{{ business.name }}</strong>" has been created. Let's get you set up!
@@ -23,8 +23,8 @@
 
                 <div class="space-y-6">
                     <!-- Step 1 -->
-                    <div class="flex items-start space-x-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-2 border-orange-200 dark:border-orange-800">
-                        <div class="flex-shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    <div class="flex items-start space-x-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-700 text-white rounded-full flex items-center justify-center font-bold text-lg">
                             1
                         </div>
                         <div class="flex-1">
@@ -32,7 +32,7 @@
                             <p class="text-gray-600 dark:text-gray-400 mb-3">
                                 Add categories and menu items. Include descriptions, prices, and dietary information.
                             </p>
-                            <a href="{% url 'core:menu_management' %}" class="inline-block bg-orange-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-600 transition">
+                            <a href="{% url 'core:menu_management' %}" class="inline-block bg-gray-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
                                 Manage Menu →
                             </a>
                         </div>
@@ -103,7 +103,7 @@
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Ready to start? Head to your dashboard to manage everything.
                     </p>
-                    <a href="{% url 'core:dashboard' %}" class="inline-block bg-orange-500 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-orange-600 transition">
+                    <a href="{% url 'core:dashboard' %}" class="inline-block bg-gray-700 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-800 transition">
                         Go to Dashboard
                     </a>
                 </div>

@@ -18,7 +18,7 @@
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ business.get_location_label }} Management</h1>
                 </div>
                 <div class="flex items-center">
-                    <a href="{% url 'core:add_table' %}" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition">
+                    <a href="{% url 'core:add_table' %}" class="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
                         + Add {{ business.get_location_label }}
                     </a>
                 </div>
@@ -86,9 +86,9 @@
                 </div>
             </div>
 
-            <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <p class="text-sm text-blue-800 dark:text-blue-200">
-                    💡 <strong>Next step:</strong> Generate QR codes for your tables.
+            <div class="mt-6 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <p class="text-sm text-gray-800 dark:text-gray-200">
+                    <strong>Next step:</strong> Generate QR codes for your tables.
                     <a href="{% url 'core:download_qr_codes' business.slug %}" target="_blank" class="font-bold underline">
                         Generate QR Codes →
                     </a>
@@ -102,7 +102,7 @@
                 <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No {{ business.get_location_label|lower }}s yet</h3>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Get started by adding your first {{ business.get_location_label|lower }}.</p>
                 <div class="mt-6">
-                    <a href="{% url 'core:add_table' %}" class="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                    <a href="{% url 'core:add_table' %}" class="inline-block bg-gray-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition">
                         Add First {{ business.get_location_label }}
                     </a>
                 </div>
