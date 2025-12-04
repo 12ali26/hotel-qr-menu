@@ -26,6 +26,7 @@ urlpatterns = [
     # Table management
     path("table-management/", views.table_management, name="table_management"),
     path("table-management/add/", views.add_table, name="add_table"),
+    path("table-management/generate-qr-codes/", views.generate_all_qr_codes, name="generate_all_qr_codes"),
     # Customer-facing menu
     path("menu/<slug:slug>/", views.hotel_menu, name="hotel_menu"),
     # API endpoints

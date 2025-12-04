@@ -1,12 +1,15 @@
+import io
 import json
 import logging
 import traceback
 from decimal import Decimal
 
+import qrcode
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.files import File
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -73,6 +76,51 @@ def get_current_business(request):
         logger.error(f"ERROR in get_current_business: {type(e).__name__}: {str(e)}")
         logger.error(traceback.format_exc())
         raise
+
+
+def generate_qr_code_for_table(table, request):
+    """
+    Helper function to generate a QR code for a specific table.
+    Returns True if successful, False otherwise.
+    """
+    try:
+        # Get the site URL from request
+        site_url = f"{request.scheme}://{request.get_host()}"
+
+        # Generate QR code URL - this URL shows the menu dynamically
+        qr_url = f"{site_url}/menu/{table.hotel.slug}/?location={table.table_number}"
+
+        logger.info(f"Generating QR code for {table} with URL: {qr_url}")
+
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+
+        # Create image
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        # Save to BytesIO
+        img_io = io.BytesIO()
+        img.save(img_io, format='PNG')
+        img_io.seek(0)
+
+        # Save to model
+        filename = f"table_{table.table_number}_qr.png"
+        table.qr_code.save(filename, File(img_io), save=True)
+
+        logger.info(f"Successfully generated QR code for {table}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to generate QR code for {table}: {str(e)}")
+        logger.error(traceback.format_exc())
+        return False
 
 
 def landing_page(request):
@@ -656,10 +704,14 @@ def table_management(request):
 
     tables = Table.objects.filter(hotel=business).order_by("table_number")
 
+    # Count tables without QR codes
+    tables_without_qr_count = tables.filter(qr_code='').count()
+
     context = {
         "business": business,
         "ownership": ownership,
         "tables": tables,
+        "tables_without_qr_count": tables_without_qr_count,
     }
 
     return render(request, "core/table_management.html", context)
@@ -679,19 +731,63 @@ def add_table(request):
         capacity = request.POST.get("capacity", 4)
 
         if table_number:
-            Table.objects.create(
+            # Create the table
+            table = Table.objects.create(
                 hotel=business,
                 table_number=table_number,
                 capacity=capacity,
                 status=Table.TableStatus.AVAILABLE,
             )
-            messages.success(request, f"Table {table_number} created successfully!")
+
+            # Auto-generate QR code for this table
+            if generate_qr_code_for_table(table, request):
+                messages.success(request, f"Table {table_number} created successfully with QR code!")
+            else:
+                messages.warning(request, f"Table {table_number} created, but QR code generation failed. You can generate it later.")
+
             return redirect("core:table_management")
         else:
             messages.error(request, "Table number is required.")
 
     context = {"business": business}
     return render(request, "core/add_table.html", context)
+
+
+@login_required
+def generate_all_qr_codes(request):
+    """
+    Generate QR codes for all tables that don't have one yet.
+    Accessible via web button - no code required!
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    # Get all tables without QR codes
+    tables = Table.objects.filter(hotel=business, qr_code='')
+
+    if not tables.exists():
+        messages.info(request, "All tables already have QR codes!")
+        return redirect("core:table_management")
+
+    # Generate QR codes for all tables
+    generated_count = 0
+    failed_count = 0
+
+    for table in tables:
+        if generate_qr_code_for_table(table, request):
+            generated_count += 1
+        else:
+            failed_count += 1
+
+    # Show success message
+    if generated_count > 0:
+        messages.success(request, f"Successfully generated {generated_count} QR code(s)!")
+
+    if failed_count > 0:
+        messages.warning(request, f"Failed to generate {failed_count} QR code(s). Please try again.")
+
+    return redirect("core:table_management")
 
 
 @login_required
