@@ -474,7 +474,7 @@ def menu_management(request):
 
         # Get all categories with their menu items
         logger.info("Fetching categories...")
-        categories = Category.objects.filter(hotel=business).prefetch_related("menuitem_set").order_by("sort_order")
+        categories = Category.objects.filter(hotel=business).prefetch_related("menu_items").order_by("sort_order")
         logger.info(f"Found {categories.count()} categories")
 
         # Get all user's businesses for the switcher
