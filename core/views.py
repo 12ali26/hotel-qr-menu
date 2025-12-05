@@ -141,24 +141,40 @@ def hotel_menu(request, slug: str):
     Returns:
         A rendered HTML page of the business menu.
     """
-    hotel = get_object_or_404(Hotel, slug=slug, is_active=True)
+    try:
+        logger.info(f"Loading menu for slug: {slug}")
+        hotel = get_object_or_404(Hotel, slug=slug, is_active=True)
+        logger.info(f"Found hotel: {hotel.name} (id={hotel.id})")
 
-    # Get location from query parameter (table number or room number)
-    location = request.GET.get("location", "")
+        # Get location from query parameter (table number or room number)
+        location = request.GET.get("location", "")
+        logger.info(f"Location: {location}")
 
-    # Prefetch related menu items for each category to avoid N+1 queries.
-    categories = (
-        Category.objects.filter(hotel=hotel)
-        .prefetch_related("menu_items")
-        .order_by("sort_order")
-    )
+        # Prefetch related menu items for each category to avoid N+1 queries.
+        categories = (
+            Category.objects.filter(hotel=hotel)
+            .prefetch_related("menu_items")
+            .order_by("sort_order")
+        )
+        logger.info(f"Found {categories.count()} categories")
 
-    context = {
-        "hotel": hotel,
-        "categories": categories,
-        "location": location,
-    }
-    return render(request, "core/menu.html", context)
+        context = {
+            "hotel": hotel,
+            "categories": categories,
+            "location": location,
+        }
+        return render(request, "core/menu.html", context)
+
+    except Exception as e:
+        logger.error("=" * 80)
+        logger.error(f"ERROR in hotel_menu view!")
+        logger.error(f"Slug: {slug}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error message: {str(e)}")
+        logger.error(f"Full traceback:")
+        logger.error(traceback.format_exc())
+        logger.error("=" * 80)
+        raise
 
 
 @require_http_methods(["POST"])
