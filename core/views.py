@@ -612,6 +612,7 @@ def add_menu_item(request, category_id=None):
         name = request.POST.get("name", "").strip()
         description = request.POST.get("description", "").strip()
         price = request.POST.get("price")
+        image = request.FILES.get("image")  # Handle image upload
         is_available = request.POST.get("is_available") == "on"
         is_vegetarian = request.POST.get("is_vegetarian") == "on"
         is_vegan = request.POST.get("is_vegan") == "on"
@@ -625,6 +626,7 @@ def add_menu_item(request, category_id=None):
                     name=name,
                     description=description,
                     price=Decimal(price),
+                    image=image,  # Save uploaded image
                     is_available=is_available,
                     is_vegetarian=is_vegetarian,
                     is_vegan=is_vegan,
@@ -664,6 +666,11 @@ def edit_menu_item(request, item_id):
         menu_item.name = request.POST.get("name", "").strip()
         menu_item.description = request.POST.get("description", "").strip()
         menu_item.price = Decimal(request.POST.get("price", "0"))
+
+        # Handle image upload
+        if "image" in request.FILES:
+            menu_item.image = request.FILES["image"]
+
         menu_item.is_available = request.POST.get("is_available") == "on"
         menu_item.is_vegetarian = request.POST.get("is_vegetarian") == "on"
         menu_item.is_vegan = request.POST.get("is_vegan") == "on"

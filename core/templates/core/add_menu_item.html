@@ -33,7 +33,7 @@
                     </div>
                 {% endif %}
 
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="space-y-4">
                         <div>
@@ -78,26 +78,40 @@
                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                         </div>
 
+                        <div>
+                            <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Item Image
+                            </label>
+                            <input type="file" name="image" id="image" accept="image/*"
+                                   class="mt-1 block w-full text-sm text-gray-700 dark:text-gray-300
+                                          file:mr-4 file:py-2 file:px-4
+                                          file:rounded-lg file:border-0
+                                          file:text-sm file:font-medium
+                                          file:bg-gray-700 file:text-white
+                                          hover:file:bg-gray-800">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">PNG, JPG, WEBP up to 10MB</p>
+                        </div>
+
                         <div class="flex items-center space-x-4">
                             <label class="flex items-center">
-                                <input type="checkbox" name="is_available" checked class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <input type="checkbox" name="is_available" checked class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Available</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="is_vegetarian" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <input type="checkbox" name="is_vegetarian" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegetarian</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="is_vegan" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <input type="checkbox" name="is_vegan" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegan</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="is_gluten_free" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <input type="checkbox" name="is_gluten_free" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Gluten-Free</span>
                             </label>
                         </div>
 
-                        <button type="submit" class="w-full bg-orange-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                        <button type="submit" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-800 transition">
                             Add Menu Item
                         </button>
                     </div>
