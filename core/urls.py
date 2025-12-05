@@ -36,4 +36,6 @@ urlpatterns = [
     path("kitchen/<slug:slug>/", views.kitchen_dashboard, name="kitchen_dashboard"),
     # QR code download
     path("qr-codes/<slug:slug>/", views.download_qr_codes, name="download_qr_codes"),
+    # Dynamic QR code generation (no file storage needed!)
+    path("qr-code/<int:table_id>/", views.serve_qr_code, name="serve_qr_code"),
 ]

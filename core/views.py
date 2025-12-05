@@ -717,6 +717,52 @@ def table_management(request):
     return render(request, "core/table_management.html", context)
 
 
+def serve_qr_code(request, table_id):
+    """
+    Generate and serve QR code on-the-fly (no disk storage needed).
+    Works perfectly on Render's ephemeral filesystem!
+    """
+    from django.http import HttpResponse
+
+    try:
+        # Get the table
+        table = get_object_or_404(Table, id=table_id)
+
+        # Get the site URL from request
+        site_url = f"{request.scheme}://{request.get_host()}"
+
+        # Generate QR code URL
+        qr_url = f"{site_url}/menu/{table.hotel.slug}/?location={table.table_number}"
+
+        logger.info(f"Generating dynamic QR code for {table} with URL: {qr_url}")
+
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+
+        # Create image
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        # Save to BytesIO
+        img_io = io.BytesIO()
+        img.save(img_io, format='PNG')
+        img_io.seek(0)
+
+        # Return as HTTP response (dynamically generated, no file storage!)
+        return HttpResponse(img_io.getvalue(), content_type="image/png")
+
+    except Exception as e:
+        logger.error(f"Failed to serve QR code: {str(e)}")
+        logger.error(traceback.format_exc())
+        return JsonResponse({"error": "QR code generation failed"}, status=500)
+
+
 @login_required
 def add_table(request):
     """

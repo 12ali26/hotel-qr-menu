@@ -171,13 +171,8 @@
         {% for table in tables %}
         <div class="qr-card {% if forloop.counter|divisibleby:6 %}page-break{% endif %}">
             <h2>{{ hotel.get_location_label }} {{ table.table_number }}</h2>
-            {% if table.qr_code %}
-                <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
-            {% else %}
-                <div style="width: 280px; height: 280px; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; background: #f9fafb;">
-                    <p style="color: #9ca3af;">QR Code Not Generated</p>
-                </div>
-            {% endif %}
+            <!-- Dynamic QR code - generated on-the-fly, no storage needed! -->
+            <img src="{% url 'core:serve_qr_code' table.id %}" alt="QR Code for Table {{ table.table_number }}">
             <div class="info">
                 <div class="business-name">{{ hotel.name }}</div>
                 <div>Capacity: {{ table.capacity }} guests</div>
