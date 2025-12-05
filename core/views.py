@@ -702,6 +702,9 @@ def table_management(request):
         messages.warning(request, "Table management is not enabled for your business type.")
         return redirect("core:dashboard")
 
+    # Get all user's businesses for the switcher
+    all_ownerships = BusinessOwner.objects.filter(user=request.user).select_related("business")
+
     tables = Table.objects.filter(hotel=business).order_by("table_number")
 
     # Count tables without QR codes
@@ -710,6 +713,7 @@ def table_management(request):
     context = {
         "business": business,
         "ownership": ownership,
+        "all_ownerships": all_ownerships,
         "tables": tables,
         "tables_without_qr_count": tables_without_qr_count,
     }
