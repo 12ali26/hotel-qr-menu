@@ -46,7 +46,7 @@
         }
 
         .no-print button {
-            background: #f97316;
+            background: #374151;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -57,41 +57,62 @@
         }
 
         .no-print button:hover {
-            background: #ea580c;
+            background: #1f2937;
         }
 
         .qr-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
             padding: 20px;
             background: white;
         }
 
         .qr-card {
             text-align: center;
-            padding: 15px;
-            border: 2px dashed #ccc;
-            border-radius: 8px;
+            padding: 30px;
+            border: 3px solid #374151;
+            border-radius: 12px;
             break-inside: avoid;
+            background: white;
         }
 
         .qr-card h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #f97316;
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #111827;
+            font-weight: bold;
         }
 
         .qr-card img {
-            max-width: 100%;
-            height: auto;
-            margin: 10px 0;
+            width: 280px;
+            height: 280px;
+            margin: 20px auto;
+            display: block;
+            border: 2px solid #e5e7eb;
+            padding: 10px;
+            background: white;
         }
 
         .qr-card .info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 10px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .qr-card .business-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .qr-card .scan-text {
+            font-size: 16px;
+            color: #374151;
+            font-weight: 600;
+            margin-top: 12px;
         }
 
         .empty-state {
@@ -105,28 +126,41 @@
             height: 64px;
             margin-bottom: 20px;
         }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: #1e40af;
+        }
     </style>
 </head>
 <body>
 
     <!-- Header (Don't Print) -->
     <div class="no-print">
-        <h1>🎯 QR Codes for {{ hotel.name }}</h1>
+        <h1>QR Codes for {{ hotel.name }}</h1>
         <p class="instructions">
             These QR codes can be printed and placed on tables. Customers scan the code to view the menu and place orders.
         </p>
         <div>
-            <button onclick="window.print()">🖨️ Print All QR Codes</button>
-            <button onclick="window.location.href='/admin/core/table/?hotel__id__exact={{ hotel.id }}'">⚙️ Manage Tables in Admin</button>
-            <button onclick="window.history.back()">← Back</button>
+            <button onclick="window.print()">Print All QR Codes</button>
+            <button onclick="window.location.href='{% url 'core:table_management' %}'">Back to Table Management</button>
         </div>
-        {% if not tables %}
+        {% if tables %}
+        <div class="info-box">
+            <strong>Tip:</strong> QR codes are permanent! Once printed, they never need to be regenerated.
+            When you update your menu, the QR codes automatically show the new items. Print once and you're done!
+        </div>
+        {% else %}
         <div style="background: #fef3c7; padding: 15px; border-radius: 4px; margin-top: 15px; border-left: 4px solid #f59e0b;">
-            <strong>⚠️ No QR Codes Generated Yet</strong>
-            <p style="margin-top: 5px;">Run this command to generate QR codes:</p>
-            <code style="background: #1f2937; color: #10b981; padding: 8px; display: block; margin-top: 8px; border-radius: 4px;">
-                python manage.py generate_qr_codes --business={{ hotel.slug }}
-            </code>
+            <strong>No QR Codes Generated Yet</strong>
+            <p style="margin-top: 5px;">Go to Table Management and click "Generate QR Codes" button.</p>
         </div>
         {% endif %}
     </div>
@@ -135,15 +169,19 @@
     <!-- QR Codes Grid -->
     <div class="qr-grid">
         {% for table in tables %}
-        <div class="qr-card {% if forloop.counter|divisibleby:12 %}page-break{% endif %}">
+        <div class="qr-card {% if forloop.counter|divisibleby:6 %}page-break{% endif %}">
             <h2>{{ hotel.get_location_label }} {{ table.table_number }}</h2>
             {% if table.qr_code %}
                 <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.table_number }}">
+            {% else %}
+                <div style="width: 280px; height: 280px; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; background: #f9fafb;">
+                    <p style="color: #9ca3af;">QR Code Not Generated</p>
+                </div>
             {% endif %}
             <div class="info">
-                <strong>{{ hotel.name }}</strong><br>
-                Capacity: {{ table.capacity }} guests<br>
-                Scan to order
+                <div class="business-name">{{ hotel.name }}</div>
+                <div>Capacity: {{ table.capacity }} guests</div>
+                <div class="scan-text">Scan to View Menu & Order</div>
             </div>
         </div>
         {% endfor %}
@@ -155,7 +193,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
         </svg>
         <h2>No QR Codes Found</h2>
-        <p>Generate QR codes first using the management command shown above.</p>
+        <p>Go to Table Management and click "Generate QR Codes" to create them.</p>
     </div>
     {% endif %}
 
