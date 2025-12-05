@@ -251,7 +251,7 @@
 
                 async callWaiter() {
                     try {
-                        const response = await fetch('{% url "waiter_alert" hotel.slug %}', {
+                        const response = await fetch('{% url "core:waiter_alert" hotel.slug %}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -280,7 +280,7 @@
                     }
 
                     try {
-                        const response = await fetch('{% url "place_order" hotel.slug %}', {
+                        const response = await fetch('{% url "core:place_order" hotel.slug %}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
