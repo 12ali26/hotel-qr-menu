@@ -3,6 +3,8 @@ Pillow>=10.0.0  # For image handling
 qrcode>=7.4.0  # For QR code generation
 django-cors-headers>=4.0.0  # For API CORS support
 djangorestframework>=3.14.0  # For REST API endpoints
+cloudinary>=1.44.0  # Cloud image storage
+django-cloudinary-storage>=0.3.0  # Django integration for Cloudinary
 
 # Production dependencies
 gunicorn>=21.2.0  # WSGI HTTP Server
