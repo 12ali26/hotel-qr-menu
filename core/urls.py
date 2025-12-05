@@ -39,6 +39,10 @@ urlpatterns = [
     path("api/<slug:slug>/poll-orders/", views.poll_orders, name="poll_orders"),
     # Kitchen/staff dashboard
     path("kitchen/<slug:slug>/", views.kitchen_dashboard, name="kitchen_dashboard"),
+    # HTMX partials for real-time updates
+    path("htmx/kitchen/<slug:slug>/orders/", views.kitchen_orders_partial, name="kitchen_orders_partial"),
+    path("htmx/kitchen/<slug:slug>/alerts/", views.kitchen_alerts_partial, name="kitchen_alerts_partial"),
+    path("htmx/order/<str:order_id>/status/", views.order_status_partial, name="order_status_partial"),
     # QR code download
     path("qr-codes/<slug:slug>/", views.download_qr_codes, name="download_qr_codes"),
     # Dynamic QR code generation (no file storage needed!)

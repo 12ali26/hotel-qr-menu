@@ -425,6 +425,70 @@ def kitchen_dashboard(request, slug: str):
     return render(request, "core/kitchen_dashboard.html", context)
 
 
+@require_http_methods(["GET"])
+def kitchen_orders_partial(request, slug: str):
+    """
+    HTMX endpoint - Returns just the orders section for kitchen dashboard.
+    Used for auto-refreshing without full page reload.
+    """
+    hotel = get_object_or_404(Hotel, slug=slug, is_active=True)
+
+    # Get recent orders
+    orders = (
+        Order.objects.filter(hotel=hotel)
+        .exclude(status=Order.OrderStatus.COMPLETED)
+        .exclude(status=Order.OrderStatus.CANCELLED)
+        .prefetch_related("items__menu_item")
+        .order_by("-created_at")[:50]
+    )
+
+    context = {
+        "hotel": hotel,
+        "orders": orders,
+    }
+
+    return render(request, "core/partials/kitchen_orders.html", context)
+
+
+@require_http_methods(["GET"])
+def kitchen_alerts_partial(request, slug: str):
+    """
+    HTMX endpoint - Returns just the waiter alerts section for kitchen dashboard.
+    Used for auto-refreshing without full page reload.
+    """
+    hotel = get_object_or_404(Hotel, slug=slug, is_active=True)
+
+    # Get pending waiter alerts
+    waiter_alerts = []
+    if hotel.enable_waiter_alerts:
+        waiter_alerts = WaiterAlert.objects.filter(
+            hotel=hotel, status=WaiterAlert.AlertStatus.PENDING
+        ).select_related("table")[:20]
+
+    context = {
+        "hotel": hotel,
+        "waiter_alerts": waiter_alerts,
+    }
+
+    return render(request, "core/partials/kitchen_alerts.html", context)
+
+
+@require_http_methods(["GET"])
+def order_status_partial(request, order_id: str):
+    """
+    HTMX endpoint - Returns just the order status section for tracking page.
+    Used for auto-refreshing without full page reload.
+    """
+    order = get_object_or_404(Order, id=order_id)
+
+    context = {
+        "order": order,
+        "hotel": order.hotel,
+    }
+
+    return render(request, "core/partials/order_status.html", context)
+
+
 def download_qr_codes(request, slug: str):
     """
     View to download all QR codes for a business.
