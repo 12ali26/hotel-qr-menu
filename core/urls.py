@@ -29,9 +29,14 @@ urlpatterns = [
     path("table-management/generate-qr-codes/", views.generate_all_qr_codes, name="generate_all_qr_codes"),
     # Customer-facing menu
     path("menu/<slug:slug>/", views.hotel_menu, name="hotel_menu"),
+    path("track-order/<str:order_id>/", views.track_order, name="track_order"),
     # API endpoints
     path("api/<slug:slug>/order/", views.place_order, name="place_order"),
     path("api/<slug:slug>/waiter-alert/", views.create_waiter_alert, name="waiter_alert"),
+    path("api/order/<str:order_id>/status/", views.update_order_status, name="update_order_status"),
+    path("api/order/<str:order_id>/status-check/", views.check_order_status, name="check_order_status"),
+    path("api/waiter-alert/<int:alert_id>/acknowledge/", views.acknowledge_waiter_alert, name="acknowledge_alert"),
+    path("api/<slug:slug>/poll-orders/", views.poll_orders, name="poll_orders"),
     # Kitchen/staff dashboard
     path("kitchen/<slug:slug>/", views.kitchen_dashboard, name="kitchen_dashboard"),
     # QR code download

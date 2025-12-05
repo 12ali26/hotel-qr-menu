@@ -239,11 +239,15 @@ def place_order(request, slug: str):
         order.total_price = order.subtotal + order.tax_amount
         order.save()
 
+        # Build tracking URL
+        tracking_url = f"{request.scheme}://{request.get_host()}/track-order/{order.id}/"
+
         return JsonResponse(
             {
                 "success": True,
                 "order_id": str(order.id),
                 "total": float(order.total_price),
+                "tracking_url": tracking_url,
             }
         )
 
@@ -289,6 +293,105 @@ def create_waiter_alert(request, slug: str):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def update_order_status(request, order_id: str):
+    """
+    API endpoint to update order status (kitchen dashboard).
+    """
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        data = json.loads(request.body)
+        new_status = data.get("status")
+
+        # Validate status
+        valid_statuses = [choice[0] for choice in Order.OrderStatus.choices]
+        if new_status not in valid_statuses:
+            return JsonResponse({"error": "Invalid status"}, status=400)
+
+        order.status = new_status
+        order.save()
+
+        return JsonResponse({"success": True, "status": new_status})
+
+    except Exception as e:
+        logger.error(f"Failed to update order status: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def acknowledge_waiter_alert(request, alert_id: int):
+    """
+    API endpoint to acknowledge a waiter alert (kitchen dashboard).
+    """
+    try:
+        alert = get_object_or_404(WaiterAlert, id=alert_id)
+        alert.status = WaiterAlert.AlertStatus.ACKNOWLEDGED
+        alert.save()
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        logger.error(f"Failed to acknowledge alert: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def poll_orders(request, slug: str):
+    """
+    API endpoint for polling new orders (kitchen dashboard real-time updates).
+    Returns count of pending orders.
+    """
+    try:
+        hotel = get_object_or_404(Hotel, slug=slug, is_active=True)
+
+        pending_count = Order.objects.filter(
+            hotel=hotel,
+            status__in=[Order.OrderStatus.PENDING, Order.OrderStatus.ACCEPTED]
+        ).count()
+
+        return JsonResponse({
+            "success": True,
+            "pending_count": pending_count
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def check_order_status(request, order_id: str):
+    """
+    API endpoint for checking individual order status (customer tracking page).
+    """
+    try:
+        order = get_object_or_404(Order, id=order_id)
+
+        return JsonResponse({
+            "success": True,
+            "status": order.status,
+            "status_display": order.get_status_display()
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def track_order(request, order_id: str):
+    """
+    Customer order tracking page - shows real-time order status.
+    """
+    order = get_object_or_404(Order, id=order_id)
+
+    context = {
+        "order": order,
+        "hotel": order.hotel,
+    }
+
+    return render(request, "core/track_order.html", context)
 
 
 def kitchen_dashboard(request, slug: str):

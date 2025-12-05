@@ -381,10 +381,15 @@
                         const data = await response.json();
 
                         if (response.ok) {
-                            this.showNotification('Order placed successfully!');
+                            this.showNotification('Order placed successfully! Redirecting to tracking page...');
                             this.cart = [];
                             this.specialRequests = '';
                             this.showCart = false;
+
+                            // Redirect to tracking page after 2 seconds
+                            setTimeout(() => {
+                                window.location.href = data.tracking_url;
+                            }, 2000);
                         } else {
                             this.showNotification(data.error || 'Failed to place order');
                         }
