@@ -1,0 +1,155 @@
+<!-- Orders by Status -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- NEW ORDERS -->
+    <section>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
+            NEW ORDERS
+        </h2>
+        <div class="space-y-4">
+            {% for order in orders %}
+                {% if order.status == 'PENDING' or order.status == 'ACCEPTED' %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-2 border-red-500">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                {{ hotel.get_location_label }} {{ order.room_number }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ order.created_at|timesince }} ago
+                            </p>
+                        </div>
+                        <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-3 space-y-2">
+                        {% for item in order.items.all %}
+                        <div class="flex justify-between text-sm">
+                            <span class="font-semibold">{{ item.quantity }}x {{ item.menu_item.name }}</span>
+                            <span class="text-gray-600 dark:text-gray-400">{{ hotel.currency_code }} {{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if order.special_requests %}
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded mb-3">
+                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                            <strong>Note:</strong> {{ order.special_requests }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-lg">{{ hotel.currency_code }} {{ order.total_price }}</span>
+                        <button @click="updateOrderStatus('{{ order.id }}', 'PREPARING')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold">
+                            Start Preparing
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- PREPARING -->
+    <section>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-amber-100 dark:bg-amber-900/30 p-3 rounded-lg">
+            PREPARING
+        </h2>
+        <div class="space-y-4">
+            {% for order in orders %}
+                {% if order.status == 'PREPARING' %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-2 border-amber-500">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                {{ hotel.get_location_label }} {{ order.room_number }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Started {{ order.updated_at|timesince }} ago
+                            </p>
+                        </div>
+                        <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-3 space-y-2">
+                        {% for item in order.items.all %}
+                        <div class="flex justify-between text-sm">
+                            <span class="font-semibold">{{ item.quantity }}x {{ item.menu_item.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button @click="updateOrderStatus('{{ order.id }}', 'READY')" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold">
+                        Mark as Ready
+                    </button>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- READY / DELIVERED -->
+    <section>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 bg-green-100 dark:bg-green-900/30 p-3 rounded-lg">
+            READY / DELIVERING
+        </h2>
+        <div class="space-y-4">
+            {% for order in orders %}
+                {% if order.status == 'READY' or order.status == 'DELIVERED' %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-2 border-green-500">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                {{ hotel.get_location_label }} {{ order.room_number }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Ready {{ order.updated_at|timesince }} ago
+                            </p>
+                        </div>
+                        <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-3 space-y-2">
+                        {% for item in order.items.all %}
+                        <div class="text-sm">
+                            <span class="font-semibold">{{ item.quantity }}x {{ item.menu_item.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if order.status == 'READY' %}
+                    <button @click="updateOrderStatus('{{ order.id }}', 'DELIVERED')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold">
+                        Mark as Delivered
+                    </button>
+                    {% else %}
+                    <button @click="updateOrderStatus('{{ order.id }}', 'COMPLETED')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg font-semibold">
+                        Complete Order
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- Empty State -->
+{% if not orders %}
+<div class="text-center py-16">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-300">No Active Orders</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-2">Orders will appear here when customers place them.</p>
+</div>
+{% endif %}

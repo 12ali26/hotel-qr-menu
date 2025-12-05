@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl w-full">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+                    Welcome to FoodConnect!
+                </h1>
+                <p class="text-xl text-gray-600 dark:text-gray-400">
+                    Your business "<strong>{{ business.name }}</strong>" has been created. Let's get you set up!
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Quick Start Guide</h2>
+
+                <div class="space-y-6">
+                    <!-- Step 1 -->
+                    <div class="flex items-start space-x-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-700 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                            1
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Add Your Menu Items</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-3">
+                                Add categories and menu items. Include descriptions, prices, and dietary information.
+                            </p>
+                            <a href="{% url 'core:menu_management' %}" class="inline-block bg-gray-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
+                                Manage Menu →
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                            2
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                {% if business.enable_table_management %}
+                                    Add Tables/Locations
+                                {% else %}
+                                    Configure Locations
+                                {% endif %}
+                            </h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-3">
+                                {% if business.enable_table_management %}
+                                    Set up your tables with numbers and capacity. Each table will get its own QR code.
+                                {% else %}
+                                    Configure rooms or delivery zones for your business.
+                                {% endif %}
+                            </p>
+                            {% if business.enable_table_management %}
+                            <a href="{% url 'core:table_management' %}" class="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition">
+                                Manage {{ business.get_location_label }}s →
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                            3
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Generate QR Codes</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-3">
+                                After adding menu items and tables, generate QR codes and print them out.
+                            </p>
+                            <a href="{% url 'core:download_qr_codes' business.slug %}" target="_blank" class="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition">
+                                Download QR Codes →
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex-shrink-0 w-10 h-10 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                            4
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Monitor Orders</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-3">
+                                Use the kitchen dashboard to view and manage incoming orders in real-time.
+                            </p>
+                            <a href="{% url 'core:kitchen_dashboard' business.slug %}" target="_blank" class="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition">
+                                Open Kitchen Dashboard →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Ready to start? Head to your dashboard to manage everything.
+                    </p>
+                    <a href="{% url 'core:dashboard' %}" class="inline-block bg-gray-700 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-800 transition">
+                        Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

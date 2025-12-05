@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodConnect - QR-Based Ordering for Restaurants, Hotels & Cafés</title>
+    <meta name="description" content="Transform your food business with QR-based digital ordering. Customers scan, order, and pay from their phones. Perfect for restaurants, hotels, and cafés.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 text-white">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative container mx-auto px-4 py-20 md:py-32">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                    Turn Tables & Rooms Into<br>
+                    <span class="text-gray-300">Digital Ordering Stations</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-white/90">
+                    QR-based ordering platform for restaurants, hotels, and cafés.<br>
+                    Customers scan, order, and pay from their phones.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                    <a href="{% url 'core:signup' %}" class="bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                        Start Free Trial
+                    </a>
+                    <a href="#pricing" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-gray-900 transition-all">
+                        View Pricing
+                    </a>
+                </div>
+                <div class="flex flex-wrap justify-center gap-8 text-sm">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>No App Required</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Setup in 24 Hours</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Save 20% on Labor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="bg-white dark:bg-gray-800 py-8 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4">
+            <p class="text-center text-gray-600 dark:text-gray-400 mb-4">Trusted by food businesses across Qatar</p>
+            <div class="flex flex-wrap justify-center items-center gap-8 text-2xl font-bold text-gray-400">
+                <div>Restaurants</div>
+                <div>Hotels</div>
+                <div>Cafés</div>
+                <div>Cloud Kitchens</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-4">How It Works</h2>
+            <p class="text-xl text-center text-gray-600 dark:text-gray-400 mb-16">Simple. Fast. Contactless.</p>
+
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg text-center">
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl font-bold text-gray-700 dark:text-gray-300">1</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Scan QR Code</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Customer scans QR code at their table or room. No app download needed.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg text-center">
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl font-bold text-gray-700 dark:text-gray-300">2</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Browse & Order</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Beautiful digital menu in multiple languages. Add to cart and customize items.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg text-center">
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl font-bold text-gray-700 dark:text-gray-300">3</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Pay & Enjoy</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Secure payment. Order goes directly to kitchen. Track status in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Get Started Section -->
+    <section id="get-started" class="py-20 bg-white dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-4">Ready to Transform Your Business?</h2>
+            <p class="text-xl text-center text-gray-600 dark:text-gray-400 mb-12">Join restaurants, hotels, and cafés already using FoodConnect</p>
+
+            <div class="max-w-4xl mx-auto bg-gray-100 dark:bg-gray-800 rounded-2xl p-12 border-2 border-gray-300 dark:border-gray-600 text-center">
+                <h3 class="text-3xl font-bold mb-4">Start Your Free 14-Day Trial</h3>
+                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">
+                    No credit card required. Setup in under 10 minutes.<br>
+                    Get your first QR code menu live today.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-10 text-left">
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-xl">
+                        <div class="text-3xl mb-3 font-bold text-gray-700 dark:text-gray-300">1</div>
+                        <h4 class="font-bold mb-2">Create Account</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Sign up with your business details in 2 minutes</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-xl">
+                        <div class="text-3xl mb-3 font-bold text-gray-700 dark:text-gray-300">2</div>
+                        <h4 class="font-bold mb-2">Add Menu Items</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Upload your menu and customize your layout</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-xl">
+                        <div class="text-3xl mb-3 font-bold text-gray-700 dark:text-gray-300">3</div>
+                        <h4 class="font-bold mb-2">Print QR Codes</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Download and place QR codes on your tables</p>
+                    </div>
+                </div>
+
+                <a href="{% url 'core:signup' %}" class="inline-block bg-gray-700 text-white px-12 py-5 rounded-lg font-bold text-xl hover:bg-gray-800 transition-all transform hover:scale-105 shadow-lg">
+                    Get Started Free
+                </a>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">Already have an account? <a href="{% url 'core:login' %}" class="text-gray-900 dark:text-gray-300 font-bold hover:underline">Sign in</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-16">Why Choose FoodConnect?</h2>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Save 20% on Labor Costs</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Reduce staff needed for taking orders. Let technology do the work.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Increase Order Value 25%</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Customers order more when browsing at their own pace.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Faster Table Turnover</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Serve more customers per day with streamlined ordering.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Multi-Language Support</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Menu in Arabic, English, and more. Serve international guests.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Real-Time Analytics</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Track sales, popular items, peak times, and more.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                    <h3 class="text-xl font-bold mb-2">Secure Payments</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Integrated payment processing. PCI compliant and safe.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center mb-4">Simple, Transparent Pricing</h2>
+            <p class="text-xl text-center text-gray-600 dark:text-gray-400 mb-16">No hidden fees. Cancel anytime.</p>
+
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Restaurant Plan -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 border-2 border-gray-300 dark:border-gray-600 transform hover:scale-105 transition">
+                    <div class="text-gray-900 dark:text-gray-300 font-bold mb-2">RESTAURANT</div>
+                    <div class="text-4xl font-bold mb-4">QAR 179<span class="text-lg text-gray-600 dark:text-gray-400">/month</span></div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">Perfect for restaurants and cafés</p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Up to 30 tables</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Unlimited orders</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Table management</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Waiter alerts</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Kitchen display</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Basic analytics</span>
+                        </li>
+                    </ul>
+                    <a href="/admin/" class="block bg-gray-700 text-white text-center py-3 rounded-lg font-bold hover:bg-gray-800 transition">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Hotel Plan -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 border-4 border-gray-500 dark:border-gray-600 transform hover:scale-105 transition relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white px-4 py-1 rounded-full text-sm font-bold">
+                        POPULAR
+                    </div>
+                    <div class="text-gray-900 dark:text-gray-300 font-bold mb-2">HOTEL</div>
+                    <div class="text-4xl font-bold mb-4">QAR 359<span class="text-lg text-gray-600 dark:text-gray-400">/month</span></div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">Ideal for hotels and resorts</p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Up to 100 rooms</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Unlimited orders</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Charge to room</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>PMS integration ready</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Guest management</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Advanced analytics</span>
+                        </li>
+                    </ul>
+                    <a href="/admin/" class="block bg-gray-700 text-white text-center py-3 rounded-lg font-bold hover:bg-gray-800 transition">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 border-2 border-gray-300 dark:border-gray-600 transform hover:scale-105 transition">
+                    <div class="text-gray-900 dark:text-gray-300 font-bold mb-2">ENTERPRISE</div>
+                    <div class="text-4xl font-bold mb-4">Custom</div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">For chains and franchises</p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Multiple locations</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>White-label option</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Custom integrations</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Dedicated support</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>API access</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Custom features</span>
+                        </li>
+                    </ul>
+                    <a href="/admin/" class="block bg-gray-700 text-white text-center py-3 rounded-lg font-bold hover:bg-gray-800 transition">
+                        Contact Sales
+                    </a>
+                </div>
+            </div>
+
+            <p class="text-center mt-12 text-gray-600 dark:text-gray-400">
+                All plans include 14-day free trial • No credit card required • Cancel anytime
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold mb-4">Ready to Transform Your Business?</h2>
+            <p class="text-xl mb-8">Join hundreds of restaurants and hotels using FoodConnect</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/admin/" class="bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                    Start 14-Day Free Trial
+                </a>
+                <a href="#demo" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-gray-900 transition-all">
+                    Try Demo First
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-4">© 2024 FoodConnect. Made in Qatar.</p>
+            <div class="flex justify-center gap-6">
+                <a href="/admin/" class="hover:text-white transition">Admin Login</a>
+                <a href="https://github.com/12ali26/hotel-qr-menu" class="hover:text-white transition">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

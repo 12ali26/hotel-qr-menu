@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add {{ business.get_location_label }} - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4">
+        <div class="max-w-md w-full">
+            <div class="mb-6">
+                <a href="{% url 'core:table_management' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900">
+                    ← Back to {{ business.get_location_label }}s
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Add {{ business.get_location_label }}</h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="table_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ business.get_location_label }} Number *
+                            </label>
+                            <input type="text" name="table_number" id="table_number" required
+                                   placeholder="e.g., 1, 2, 3 or A1, B2"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        </div>
+
+                        <div>
+                            <label for="capacity" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Capacity (number of guests)
+                            </label>
+                            <input type="number" name="capacity" id="capacity" value="4" min="1"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        </div>
+
+                        <button type="submit" class="w-full bg-orange-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-600 transition">
+                            Add {{ business.get_location_label }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hotel.name }} - Kitchen Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Hidden audio for notification sound -->
+    <audio id="notification-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjGH0fPTgjMGHm7A7+OZURE=" type="audio/wav">
+    </audio>
+
+    <div class="container mx-auto p-4" x-data="kitchenApp()">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ hotel.name }}</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Kitchen Dashboard</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center">
+                        <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="font-semibold">Auto-refresh: 3s</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Waiter Alerts (Restaurant Only) - Auto-refreshes with HTMX -->
+        <div
+            hx-get="{% url 'core:kitchen_alerts_partial' hotel.slug %}"
+            hx-trigger="every 5s"
+            hx-swap="innerHTML">
+            {% include 'core/partials/kitchen_alerts.html' %}
+        </div>
+
+        <!-- Orders by Status - Auto-refreshes with HTMX -->
+        <div
+            hx-get="{% url 'core:kitchen_orders_partial' hotel.slug %}"
+            hx-trigger="every 3s"
+            hx-swap="innerHTML">
+            {% include 'core/partials/kitchen_orders.html' %}
+        </div>
+    </div>
+
+    <script>
+        function kitchenApp() {
+            return {
+                async updateOrderStatus(orderId, newStatus) {
+                    if (!confirm(`Update order status to ${newStatus}?`)) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/order/${orderId}/status/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        });
+
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Failed to update order status');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An error occurred');
+                    }
+                },
+
+                async acknowledgeAlert(alertId) {
+                    try {
+                        const response = await fetch(`/api/waiter-alert/${alertId}/acknowledge/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCookie('csrftoken')
+                            }
+                        });
+
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Failed to acknowledge alert');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An error occurred');
+                    }
+                },
+
+                getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

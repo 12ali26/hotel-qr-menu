@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Business</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen py-12 px-4">
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <a href="{% url 'core:dashboard' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900">
+                    ← Back to Dashboard
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Add New Business</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    Add another restaurant, hotel, or café to your account.
+                </p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="business_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Business Name *
+                            </label>
+                            <input type="text" name="business_name" id="business_name" required
+                                   placeholder="e.g., Sunset Café"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                        </div>
+
+                        <div>
+                            <label for="business_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Business Type *
+                            </label>
+                            <select name="business_type" id="business_type" required
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                                <option value="RESTAURANT">Restaurant</option>
+                                <option value="CAFE">Café</option>
+                                <option value="HOTEL">Hotel</option>
+                                <option value="CLOUD_KITCHEN">Cloud Kitchen</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-800 transition">
+                            Create Business
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

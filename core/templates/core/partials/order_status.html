@@ -1,0 +1,86 @@
+<!-- Progress Tracker -->
+<div class="space-y-6">
+    <!-- Received -->
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full flex items-center justify-center bg-green-500">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+        </div>
+        <div class="ml-4 flex-1">
+            <h4 class="text-lg font-semibold text-gray-900">Order Received</h4>
+            <p class="text-sm text-gray-600">We've received your order</p>
+        </div>
+    </div>
+
+    <div class="ml-6 border-l-2 border-gray-300 h-8"></div>
+
+    <!-- Preparing -->
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full flex items-center justify-center {% if order.status == 'PREPARING' or order.status == 'READY' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}bg-amber-500{% else %}bg-gray-300{% endif %}">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="ml-4 flex-1">
+            <h4 class="text-lg font-semibold text-gray-900">Preparing</h4>
+            <p class="text-sm text-gray-600">Our kitchen is preparing your order</p>
+        </div>
+    </div>
+
+    <div class="ml-6 border-l-2 border-gray-300 h-8"></div>
+
+    <!-- Ready -->
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full flex items-center justify-center {% if order.status == 'READY' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}bg-blue-500{% else %}bg-gray-300{% endif %}">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="ml-4 flex-1">
+            <h4 class="text-lg font-semibold text-gray-900">Ready</h4>
+            <p class="text-sm text-gray-600">Your order is ready</p>
+        </div>
+    </div>
+
+    <div class="ml-6 border-l-2 border-gray-300 h-8"></div>
+
+    <!-- Out for Delivery -->
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full flex items-center justify-center {% if order.status == 'DELIVERED' or order.status == 'COMPLETED' %}bg-indigo-500{% else %}bg-gray-300{% endif %}">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+            </div>
+        </div>
+        <div class="ml-4 flex-1">
+            <h4 class="text-lg font-semibold text-gray-900">Out for Delivery</h4>
+            <p class="text-sm text-gray-600">Your order is on its way</p>
+        </div>
+    </div>
+
+    <div class="ml-6 border-l-2 border-gray-300 h-8"></div>
+
+    <!-- Delivered -->
+    <div class="flex items-start">
+        <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full flex items-center justify-center {% if order.status == 'COMPLETED' %}bg-green-600{% else %}bg-gray-300{% endif %}">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+        </div>
+        <div class="ml-4 flex-1">
+            <h4 class="text-lg font-semibold text-gray-900">Delivered</h4>
+            <p class="text-sm text-gray-600">Enjoy your meal!</p>
+        </div>
+    </div>
+</div>
