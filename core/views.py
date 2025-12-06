@@ -83,6 +83,7 @@ def get_current_business(request):
 def generate_qr_code_for_table(table, request):
     """
     Helper function to generate a QR code for a specific table.
+    Embeds the business logo in the center if available.
     Returns True if successful, False otherwise.
     """
     try:
@@ -94,10 +95,10 @@ def generate_qr_code_for_table(table, request):
 
         logger.info(f"Generating QR code for {table} with URL: {qr_url}")
 
-        # Create QR code
+        # Create QR code with high error correction (allows logo overlay)
         qr = qrcode.QRCode(
             version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction for logo
             box_size=10,
             border=4,
         )
@@ -106,6 +107,44 @@ def generate_qr_code_for_table(table, request):
 
         # Create image
         img = qr.make_image(fill_color="black", back_color="white")
+        img = img.convert('RGB')  # Convert to RGB for logo overlay
+
+        # Embed logo if available
+        if table.hotel.logo:
+            try:
+                from PIL import Image, ImageDraw
+
+                # Open logo
+                logo = Image.open(table.hotel.logo)
+
+                # Calculate logo size (20% of QR code size)
+                qr_width, qr_height = img.size
+                logo_size = int(qr_width * 0.2)
+
+                # Resize logo maintaining aspect ratio
+                logo.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
+
+                # Create white background for logo (better contrast)
+                logo_bg_size = int(logo_size * 1.1)
+                logo_bg = Image.new('RGB', (logo_bg_size, logo_bg_size), 'white')
+
+                # Paste logo on white background
+                logo_pos = ((logo_bg_size - logo.size[0]) // 2, (logo_bg_size - logo.size[1]) // 2)
+                if logo.mode == 'RGBA':
+                    logo_bg.paste(logo, logo_pos, logo)
+                else:
+                    logo_bg.paste(logo, logo_pos)
+
+                # Calculate position to center logo on QR code
+                pos = ((qr_width - logo_bg_size) // 2, (qr_height - logo_bg_size) // 2)
+
+                # Paste logo background onto QR code
+                img.paste(logo_bg, pos)
+
+                logger.info(f"Successfully embedded logo for {table.hotel.name}")
+            except Exception as logo_error:
+                logger.warning(f"Could not embed logo for {table.hotel.name}: {str(logo_error)}")
+                # Continue without logo if embedding fails
 
         # Save to BytesIO
         img_io = io.BytesIO()
@@ -1270,7 +1309,7 @@ def table_management(request):
 
 def serve_qr_code(request, table_id):
     """
-    Generate and serve QR code on-the-fly (no disk storage needed).
+    Generate and serve QR code on-the-fly with embedded logo (no disk storage needed).
     Works perfectly on Render's ephemeral filesystem!
     """
     from django.http import HttpResponse
@@ -1287,10 +1326,10 @@ def serve_qr_code(request, table_id):
 
         logger.info(f"Generating dynamic QR code for {table} with URL: {qr_url}")
 
-        # Create QR code
+        # Create QR code with high error correction (allows logo overlay)
         qr = qrcode.QRCode(
             version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction for logo
             box_size=10,
             border=4,
         )
@@ -1299,6 +1338,44 @@ def serve_qr_code(request, table_id):
 
         # Create image
         img = qr.make_image(fill_color="black", back_color="white")
+        img = img.convert('RGB')  # Convert to RGB for logo overlay
+
+        # Embed logo if available
+        if table.hotel.logo:
+            try:
+                from PIL import Image
+
+                # Open logo
+                logo = Image.open(table.hotel.logo)
+
+                # Calculate logo size (20% of QR code size)
+                qr_width, qr_height = img.size
+                logo_size = int(qr_width * 0.2)
+
+                # Resize logo maintaining aspect ratio
+                logo.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
+
+                # Create white background for logo (better contrast)
+                logo_bg_size = int(logo_size * 1.1)
+                logo_bg = Image.new('RGB', (logo_bg_size, logo_bg_size), 'white')
+
+                # Paste logo on white background
+                logo_pos = ((logo_bg_size - logo.size[0]) // 2, (logo_bg_size - logo.size[1]) // 2)
+                if logo.mode == 'RGBA':
+                    logo_bg.paste(logo, logo_pos, logo)
+                else:
+                    logo_bg.paste(logo, logo_pos)
+
+                # Calculate position to center logo on QR code
+                pos = ((qr_width - logo_bg_size) // 2, (qr_height - logo_bg_size) // 2)
+
+                # Paste logo background onto QR code
+                img.paste(logo_bg, pos)
+
+                logger.info(f"Successfully embedded logo for {table.hotel.name}")
+            except Exception as logo_error:
+                logger.warning(f"Could not embed logo for {table.hotel.name}: {str(logo_error)}")
+                # Continue without logo if embedding fails
 
         # Save to BytesIO
         img_io = io.BytesIO()
