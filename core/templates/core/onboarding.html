@@ -30,14 +30,17 @@
                         <div class="flex-1">
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Add Your Menu Items</h3>
                             <p class="text-gray-600 dark:text-gray-400 mb-3">
-                                Add categories and menu items manually, or use AI to extract data from your existing menu photo.
+                                Add items manually, use AI to extract from a photo, or bulk import from a CSV file.
                             </p>
                             <div class="flex flex-wrap gap-3">
                                 <a href="{% url 'core:menu_management' %}" class="inline-block bg-gray-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
                                     Manage Menu →
                                 </a>
                                 <a href="{% url 'core:ai_menu_upload' %}" class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-medium transition">
-                                    🤖 AI Menu Upload →
+                                    🤖 AI Upload →
+                                </a>
+                                <a href="{% url 'core:csv_menu_upload' %}" class="inline-block bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-medium transition">
+                                    📊 CSV Import →
                                 </a>
                             </div>
                         </div>

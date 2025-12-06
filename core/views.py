@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from django.views.decorators.csrf import csrf_exempt
@@ -19,6 +19,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
 from .ai_menu_extractor import extract_menu_from_image, validate_menu_data, estimate_extraction_confidence
+from .csv_menu_importer import import_menu_from_csv, validate_csv_data, generate_csv_template
 
 logger = logging.getLogger(__name__)
 
@@ -843,6 +844,179 @@ def ai_menu_confirm(request):
         logger.error(f"Error saving AI-extracted menu: {str(e)}")
         messages.error(request, f"An error occurred while saving your menu. Please try again.")
         return redirect("core:ai_menu_preview")
+
+
+@login_required
+def csv_menu_upload(request):
+    """
+    Upload CSV file for bulk menu import.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_file")
+
+        if not csv_file:
+            messages.error(request, "Please upload a CSV file.")
+            return redirect("core:csv_menu_upload")
+
+        # Validate file size (max 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            messages.error(request, "File too large. Maximum size is 5MB.")
+            return redirect("core:csv_menu_upload")
+
+        try:
+            # Import menu data from CSV
+            logger.info(f"Starting CSV menu import for business: {business.name}")
+            menu_data, errors = import_menu_from_csv(csv_file)
+
+            if not menu_data:
+                # Show all errors
+                for error in errors:
+                    messages.error(request, error)
+                return redirect("core:csv_menu_upload")
+
+            # Validate imported data
+            if not validate_csv_data(menu_data):
+                messages.error(request, "CSV data is invalid. Please check your file and try again.")
+                return redirect("core:csv_menu_upload")
+
+            # Store imported data in session for preview
+            request.session["csv_menu_data"] = menu_data
+            request.session["csv_import_errors"] = errors
+
+            messages.success(
+                request,
+                f"CSV parsed successfully! Found {menu_data['stats']['total_items']} items in {menu_data['stats']['total_categories']} categories. Please review and confirm."
+            )
+            return redirect("core:csv_menu_preview")
+
+        except Exception as e:
+            logger.error(f"Error during CSV import: {str(e)}")
+            messages.error(request, f"An error occurred while processing your CSV. Please try again.")
+            return redirect("core:csv_menu_upload")
+
+    context = {
+        "business": business,
+    }
+    return render(request, "core/csv_menu_upload.html", context)
+
+
+@login_required
+def csv_menu_preview(request):
+    """
+    Preview CSV-imported menu data before saving.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    # Get imported menu data from session
+    menu_data = request.session.get("csv_menu_data")
+    errors = request.session.get("csv_import_errors", [])
+
+    if not menu_data:
+        messages.warning(request, "No menu data to preview. Please upload a CSV file first.")
+        return redirect("core:csv_menu_upload")
+
+    context = {
+        "business": business,
+        "menu_data": menu_data,
+        "errors": errors,
+    }
+    return render(request, "core/csv_menu_preview.html", context)
+
+
+@login_required
+def csv_menu_confirm(request):
+    """
+    Confirm and save CSV-imported menu data to database.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    if request.method != "POST":
+        return redirect("core:csv_menu_preview")
+
+    # Get imported menu data from session
+    menu_data = request.session.get("csv_menu_data")
+
+    if not menu_data:
+        messages.error(request, "No menu data found. Please upload a CSV file first.")
+        return redirect("core:csv_menu_upload")
+
+    try:
+        with transaction.atomic():
+            categories_created = 0
+            items_created = 0
+
+            # Create categories and menu items
+            for category_name, items in menu_data.get("categories", {}).items():
+                # Create or get category
+                category, created = Category.objects.get_or_create(
+                    hotel=business,
+                    name=category_name,
+                )
+
+                if created:
+                    categories_created += 1
+
+                # Create menu items
+                for item_data in items:
+                    # Check if item already exists
+                    if MenuItem.objects.filter(category=category, name=item_data["name"]).exists():
+                        logger.info(f"Skipping duplicate item: {item_data['name']}")
+                        continue
+
+                    MenuItem.objects.create(
+                        category=category,
+                        name=item_data["name"],
+                        description=item_data.get("description", ""),
+                        price=Decimal(str(item_data["price"])),
+                        is_available=item_data.get("is_available", True),
+                        is_vegetarian=item_data.get("is_vegetarian", False),
+                        is_vegan=item_data.get("is_vegan", False),
+                        is_featured=item_data.get("is_featured", False),
+                        is_daily_special=item_data.get("is_daily_special", False),
+                        spice_level=item_data.get("spice_level", "NONE"),
+                        allergens=item_data.get("allergens", ""),
+                        prep_time_minutes=item_data.get("prep_time_minutes", 15),
+                    )
+                    items_created += 1
+
+            # Clear session data
+            del request.session["csv_menu_data"]
+            if "csv_import_errors" in request.session:
+                del request.session["csv_import_errors"]
+
+            messages.success(
+                request,
+                f"🎉 Menu imported successfully! Created {categories_created} categories and {items_created} items."
+            )
+            return redirect("core:menu_management")
+
+    except Exception as e:
+        logger.error(f"Error saving CSV menu: {str(e)}")
+        messages.error(request, f"An error occurred while saving your menu. Please try again.")
+        return redirect("core:csv_menu_preview")
+
+
+@login_required
+def csv_template_download(request):
+    """
+    Download CSV template with example data.
+    """
+    # Generate CSV template
+    template_content = generate_csv_template()
+
+    # Create HTTP response with CSV content
+    response = HttpResponse(template_content, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="menu_import_template.csv"'
+
+    return response
 
 
 @login_required

@@ -20,6 +20,11 @@ urlpatterns = [
     path("ai-menu-upload/", views.ai_menu_upload, name="ai_menu_upload"),
     path("ai-menu-preview/", views.ai_menu_preview, name="ai_menu_preview"),
     path("ai-menu-confirm/", views.ai_menu_confirm, name="ai_menu_confirm"),
+    # CSV Menu Import
+    path("csv-menu-upload/", views.csv_menu_upload, name="csv_menu_upload"),
+    path("csv-menu-preview/", views.csv_menu_preview, name="csv_menu_preview"),
+    path("csv-menu-confirm/", views.csv_menu_confirm, name="csv_menu_confirm"),
+    path("csv-template-download/", views.csv_template_download, name="csv_template_download"),
     # Menu management
     path("menu-management/", views.menu_management, name="menu_management"),
     path("menu-management/add-category/", views.add_category, name="add_category"),

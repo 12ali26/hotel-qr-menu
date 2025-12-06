@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Bulk Import - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:menu_management' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        ← Back to Menu Management
+                    </a>
+                    <h1 class="text-lg font-semibold text-gray-900 dark:text-white">CSV Bulk Import</h1>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded relative mb-4">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 bg-green-100 dark:bg-green-900 rounded-full mb-4">
+                    <svg class="w-12 h-12 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    Bulk Import Menu from CSV
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Upload a CSV or Excel file to import multiple menu items at once
+                </p>
+            </div>
+
+            <!-- Upload Form -->
+            <form method="post" enctype="multipart/form-data"
+                  x-data="{
+                      fileName: '',
+                      fileSize: '',
+                      showPreview: false
+                  }">
+                {% csrf_token %}
+
+                <!-- File Drop Zone -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Upload CSV File
+                    </label>
+                    <div class="border-3 border-dashed border-green-300 dark:border-green-700 rounded-xl p-8 text-center hover:border-green-400 dark:hover:border-green-600 transition cursor-pointer bg-green-50 dark:bg-green-900/20"
+                         @click="$refs.fileInput.click()"
+                         @dragover.prevent="$el.classList.add('border-green-500')"
+                         @dragleave.prevent="$el.classList.remove('border-green-500')"
+                         @drop.prevent="
+                             $el.classList.remove('border-green-500');
+                             let file = $event.dataTransfer.files[0];
+                             if (file) {
+                                 $refs.fileInput.files = $event.dataTransfer.files;
+                                 fileName = file.name;
+                                 fileSize = (file.size / 1024).toFixed(1) + ' KB';
+                                 showPreview = true;
+                             }
+                         ">
+                        <template x-if="!showPreview">
+                            <div>
+                                <svg class="w-20 h-20 mx-auto text-green-400 dark:text-green-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Click to upload or drag and drop
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    CSV, TSV, or Excel files (Max 5MB)
+                                </p>
+                            </div>
+                        </template>
+                        <template x-if="showPreview">
+                            <div class="flex items-center justify-center space-x-4">
+                                <svg class="w-16 h-16 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div class="text-left">
+                                    <p class="font-medium text-gray-900 dark:text-white" x-text="fileName"></p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="fileSize"></p>
+                                </div>
+                                <button type="button" @click.stop="showPreview = false; fileName = ''; $refs.fileInput.value = '';"
+                                        class="text-red-600 hover:text-red-700">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                        <input type="file"
+                               name="csv_file"
+                               x-ref="fileInput"
+                               accept=".csv,.tsv,.txt"
+                               class="hidden"
+                               required
+                               @change="
+                                   let file = $event.target.files[0];
+                                   if (file) {
+                                       fileName = file.name;
+                                       fileSize = (file.size / 1024).toFixed(1) + ' KB';
+                                       showPreview = true;
+                                   }
+                               ">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center mb-6">
+                    <button type="submit"
+                            class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition shadow-lg">
+                        📊 Parse & Preview CSV
+                    </button>
+                </div>
+            </form>
+
+            <!-- Instructions -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">How to Use CSV Import</h3>
+
+                <div class="space-y-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <strong>Step 1:</strong> Download the CSV template below and fill it with your menu data
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <strong>Step 2:</strong> Upload your CSV file using the form above
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <strong>Step 3:</strong> Review the preview and confirm to import all items
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <a href="{% url 'core:csv_template_download' %}"
+                       class="inline-flex items-center space-x-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Download CSV Template</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-2">💡 Tips for Best Results</h4>
+                <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
+                    <li>Required columns: <code class="bg-blue-200 dark:bg-blue-800 px-1 rounded">name</code> and <code class="bg-blue-200 dark:bg-blue-800 px-1 rounded">price</code></li>
+                    <li>Column names are flexible (e.g., "Item Name", "item", or "dish" all work for name)</li>
+                    <li>Use "yes/no", "true/false", or "1/0" for boolean fields</li>
+                    <li>Spice levels: none, mild, medium, hot, extra_hot</li>
+                    <li>Supports comma (,), semicolon (;), and tab-separated files</li>
+                    <li>Can be edited in Excel, Google Sheets, or any text editor</li>
+                </ul>
+            </div>
+
+            <!-- Feature Note -->
+            <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <strong>CSV Bulk Import</strong> is completely free and works offline. Perfect for importing existing menu data.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

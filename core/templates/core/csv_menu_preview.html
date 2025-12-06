@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview CSV Import - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:csv_menu_upload' %}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        ← Back to Upload
+                    </a>
+                    <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Preview CSV Import</h1>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Import Summary</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div class="text-4xl font-bold text-green-600 dark:text-green-400">
+                        {{ menu_data.stats.total_items }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Menu Items
+                    </div>
+                </div>
+
+                <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div class="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                        {{ menu_data.stats.total_categories }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Categories
+                    </div>
+                </div>
+
+                {% if menu_data.stats.skipped_rows > 0 %}
+                <div class="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <div class="text-4xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {{ menu_data.stats.skipped_rows }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Rows Skipped
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div class="text-4xl font-bold text-green-600 dark:text-green-400">
+                        ✓
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        No Errors
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Errors/Warnings -->
+        {% if errors %}
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+            <h3 class="font-semibold text-yellow-900 dark:text-yellow-300 mb-2">⚠️ Warnings</h3>
+            <ul class="text-sm text-yellow-800 dark:text-yellow-200 space-y-1 list-disc list-inside">
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Menu Preview by Category -->
+        <div class="space-y-6">
+            {% for category_name, items in menu_data.categories.items %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow" x-data="{ expanded: true }">
+                <!-- Category Header -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 flex justify-between items-center cursor-pointer"
+                     @click="expanded = !expanded">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ category_name }}</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ items|length }} item(s)</p>
+                    </div>
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform"
+                         :class="{ 'rotate-180': expanded }"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+
+                <!-- Items -->
+                <div x-show="expanded" x-collapse class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for item in items %}
+                    <div class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="text-lg font-medium text-gray-900 dark:text-white">{{ item.name }}</h4>
+
+                                    {% if item.is_featured %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded">
+                                        ⭐ Featured
+                                    </span>
+                                    {% endif %}
+
+                                    {% if item.is_daily_special %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded">
+                                        🌟 Special
+                                    </span>
+                                    {% endif %}
+
+                                    {% if item.is_vegetarian %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                                        🥬 Vegetarian
+                                    </span>
+                                    {% endif %}
+
+                                    {% if item.is_vegan %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                                        🌱 Vegan
+                                    </span>
+                                    {% endif %}
+
+                                    {% if item.spice_level != 'NONE' %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded">
+                                        {% if item.spice_level == 'MILD' %}🌶️ Mild
+                                        {% elif item.spice_level == 'MEDIUM' %}🌶️🌶️ Medium
+                                        {% elif item.spice_level == 'HOT' %}🌶️🌶️🌶️ Hot
+                                        {% elif item.spice_level == 'EXTRA_HOT' %}🌶️🌶️🌶️🌶️ Extra Hot
+                                        {% endif %}
+                                    </span>
+                                    {% endif %}
+
+                                    {% if not item.is_available %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded">
+                                        Unavailable
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if item.description %}
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ item.description }}</p>
+                                {% endif %}
+
+                                <div class="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    {% if item.allergens %}
+                                    <span>⚠️ Allergens: {{ item.allergens }}</span>
+                                    {% endif %}
+                                    <span>⏱️ {{ item.prep_time_minutes }} min</span>
+                                </div>
+                            </div>
+
+                            <div class="ml-4 text-right">
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {{ business.currency_code }} {{ item.price }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Confirm Actions -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6 sticky bottom-0">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ready to Import?</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        This will add {{ menu_data.stats.total_items }} items to your menu
+                    </p>
+                </div>
+
+                <div class="flex space-x-4">
+                    <a href="{% url 'core:csv_menu_upload' %}"
+                       class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        Cancel
+                    </a>
+
+                    <form method="post" action="{% url 'core:csv_menu_confirm' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-medium transition shadow-lg">
+                            ✓ Confirm & Import Menu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-collapse categories if there are too many
+        document.addEventListener('alpine:init', () => {
+            if (document.querySelectorAll('[x-data]').length > 5) {
+                // Start with categories collapsed if more than 5
+                document.querySelectorAll('[x-data]').forEach((el, idx) => {
+                    if (idx > 2) { // Keep first 3 expanded
+                        Alpine.$data(el).expanded = false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
