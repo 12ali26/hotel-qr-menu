@@ -21,6 +21,55 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+        /* Flying cart animation */
+        @keyframes flyToCart {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(var(--x), var(--y)) scale(0.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .fly-to-cart {
+            animation: flyToCart 0.8s ease-in-out;
+        }
+
+        /* Pulse animation for badges */
+        @keyframes pulse-badge {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse-badge {
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        /* Lazy load fade in */
+        .lazy-load {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .lazy-load.loaded {
+            opacity: 1;
+        }
+
+        /* Modal backdrop blur */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
 <body class="bg-gray-50" x-data="menuApp()">
@@ -40,7 +89,47 @@
                     <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span x-show="cart.length > 0" class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" x-text="cart.length"></span>
+                    <span x-show="cart.length > 0"
+                          x-transition
+                          class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                          x-text="cart.length"></span>
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mt-4">
+                <div class="relative">
+                    <input type="text"
+                           x-model="searchQuery"
+                           @input="handleSearch()"
+                           placeholder="Search menu items..."
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent">
+                    <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Sort & Filter Controls -->
+            <div class="mt-4 flex items-center gap-3 overflow-x-auto pb-2">
+                <select x-model="sortBy" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="default">Sort: Default</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="name">Name: A to Z</option>
+                </select>
+
+                <button @click="showFeaturedOnly = !showFeaturedOnly"
+                        :class="showFeaturedOnly ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-3 py-2 rounded-lg text-sm whitespace-nowrap transition">
+                    ⭐ Featured
+                </button>
+
+                <button @click="showVegOnly = !showVegOnly"
+                        :class="showVegOnly ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-3 py-2 rounded-lg text-sm whitespace-nowrap transition">
+                    🌱 Vegetarian
                 </button>
             </div>
 
@@ -64,19 +153,89 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6 pb-24">
+
+        <!-- Daily Specials Section -->
         {% for category in categories %}
-        <div x-show="selectedCategory === null || selectedCategory === '{{ category.name }}'" class="mb-8">
+            {% for item in category.menu_items.all %}
+                {% if item.is_available and item.is_daily_special %}
+                    <!-- Only show this section once if there are specials -->
+                    <template x-if="!specialsSectionShown">
+                        <div x-init="specialsSectionShown = true" class="mb-8">
+                            <div class="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-6 text-white mb-4">
+                                <h2 class="text-2xl font-bold mb-2 flex items-center">
+                                    <svg class="w-8 h-8 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    Today's Specials
+                                </h2>
+                                <p class="text-amber-100">Limited time offers - Order now!</p>
+                            </div>
+                        </div>
+                    </template>
+                    {% break %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+
+        <!-- Menu Categories -->
+        {% for category in categories %}
+        <div x-show="!selectedCategory || selectedCategory === '{{ category.name }}'"
+             x-transition
+             class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ category.name }}</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {% for item in category.menu_items.all %}
                 {% if item.is_available %}
-                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <div x-data="{
+                    item: {
+                        id: {{ item.id }},
+                        name: '{{ item.name|escapejs }}',
+                        price: {{ item.price }},
+                        description: '{{ item.description|escapejs }}',
+                        allergens: '{{ item.allergens|escapejs }}',
+                        prepTime: {{ item.prep_time_minutes }},
+                        spiceLevel: '{{ item.spice_level }}',
+                        isFeatured: {{ item.is_featured|yesno:"true,false" }},
+                        isDailySpecial: {{ item.is_daily_special|yesno:"true,false" }},
+                        isVegetarian: {{ item.is_vegetarian|yesno:"true,false" }},
+                        isVegan: {{ item.is_vegan|yesno:"true,false" }},
+                        isGlutenFree: {{ item.is_gluten_free|yesno:"true,false" }},
+                        popularityScore: {{ item.popularity_score }},
+                        imageUrl: '{% if item.image %}{{ item.image.url }}{% endif %}'
+                    }
+                }"
+                x-show="filterItem(item)"
+                x-transition
+                class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                @click="openItemModal(item)">
+
+                    <!-- Badges -->
+                    <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                        <template x-if="item.isDailySpecial">
+                            <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold pulse-badge shadow-lg">
+                                🔥 Daily Special
+                            </span>
+                        </template>
+                        <template x-if="item.isFeatured && !item.isDailySpecial">
+                            <span class="bg-black text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                ⭐ Featured
+                            </span>
+                        </template>
+                        <template x-if="item.popularityScore > 10">
+                            <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                🔥 Popular
+                            </span>
+                        </template>
+                    </div>
+
                     <!-- Item Image -->
                     {% if item.image %}
                     <div class="relative h-56 overflow-hidden bg-gray-100">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}"
-                             class="w-full h-full object-cover">
+                        <img data-src="{{ item.image.url }}"
+                             alt="{{ item.name }}"
+                             class="lazy-load w-full h-full object-cover"
+                             loading="lazy">
                     </div>
                     {% else %}
                     <div class="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -88,21 +247,50 @@
 
                     <!-- Item Details -->
                     <div class="p-4">
-                        <h3 class="font-bold text-gray-900 text-lg mb-1">{{ item.name }}</h3>
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-bold text-gray-900 text-lg flex-1">{{ item.name }}</h3>
+                            <!-- Spice Level -->
+                            {% if item.spice_level != 'NONE' %}
+                            <span class="ml-2 text-lg" title="{{ item.get_spice_level_display }}">
+                                {{ item.get_spice_level_display|slice:":10" }}
+                            </span>
+                            {% endif %}
+                        </div>
+
                         <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ item.description|default:"Delicious dish" }}</p>
 
+                        <!-- Prep Time -->
+                        <div class="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ item.prep_time_minutes }} min</span>
+                        </div>
+
                         <!-- Dietary Tags -->
-                        <div class="flex gap-1 mb-3">
+                        <div class="flex flex-wrap gap-1 mb-3">
                             {% if item.is_vegetarian %}
-                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Vegetarian</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">🌱 Vegetarian</span>
                             {% endif %}
                             {% if item.is_vegan %}
-                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Vegan</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">🥬 Vegan</span>
                             {% endif %}
                             {% if item.is_gluten_free %}
                             <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Gluten-Free</span>
                             {% endif %}
                         </div>
+
+                        <!-- Allergen Warning -->
+                        {% if item.allergens %}
+                        <div class="mb-3 p-2 bg-red-50 rounded-lg border border-red-200">
+                            <p class="text-xs text-red-700 flex items-start">
+                                <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                <span>Contains: {{ item.allergens }}</span>
+                            </p>
+                        </div>
+                        {% endif %}
 
                         <!-- Price and Add Button -->
                         <div class="flex items-center justify-between">
@@ -110,7 +298,7 @@
                                 <p class="text-2xl font-bold text-gray-900">{{ item.price|floatformat:2 }}</p>
                                 <p class="text-xs text-gray-500">{{ hotel.currency_code }}</p>
                             </div>
-                            <button @click="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})"
+                            <button @click.stop="addToCartWithAnimation($event, {{ item.id }}, '{{ item.name|escapejs }}', {{ item.price }})"
                                     class="bg-black text-white px-6 py-3 rounded-full font-medium hover:bg-gray-800 transition flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -135,6 +323,105 @@
         </div>
         {% endfor %}
     </main>
+
+    <!-- Item Detail Modal -->
+    <div x-show="showItemModal"
+         @click="showItemModal = false"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop"
+         style="display: none;">
+
+        <div @click.stop
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
+                <h3 class="text-xl font-bold text-gray-900" x-text="selectedItem.name"></h3>
+                <button @click="showItemModal = false" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6">
+                <!-- Large Image -->
+                <template x-if="selectedItem.imageUrl">
+                    <div class="mb-6 rounded-xl overflow-hidden">
+                        <img :src="selectedItem.imageUrl" :alt="selectedItem.name" class="w-full h-80 object-cover">
+                    </div>
+                </template>
+
+                <!-- Description -->
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-2">Description</h4>
+                    <p class="text-gray-600" x-text="selectedItem.description || 'Delicious dish prepared fresh'"></p>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500 mb-1">Prep Time</p>
+                        <p class="font-semibold text-gray-900" x-text="selectedItem.prepTime + ' min'"></p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500 mb-1">Price</p>
+                        <p class="font-semibold text-gray-900" x-text="'{{ hotel.currency_code }} ' + selectedItem.price.toFixed(2)"></p>
+                    </div>
+                </div>
+
+                <!-- Dietary Info -->
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-3">Dietary Information</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-if="selectedItem.isVegetarian">
+                            <span class="px-3 py-2 bg-green-100 text-green-700 text-sm rounded-lg">🌱 Vegetarian</span>
+                        </template>
+                        <template x-if="selectedItem.isVegan">
+                            <span class="px-3 py-2 bg-green-100 text-green-700 text-sm rounded-lg">🥬 Vegan</span>
+                        </template>
+                        <template x-if="selectedItem.isGlutenFree">
+                            <span class="px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded-lg">Gluten-Free</span>
+                        </template>
+                        <template x-if="selectedItem.spiceLevel !== 'NONE'">
+                            <span class="px-3 py-2 bg-red-100 text-red-700 text-sm rounded-lg" x-text="'Spice: ' + selectedItem.spiceLevel"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Allergens -->
+                <template x-if="selectedItem.allergens">
+                    <div class="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                        <h4 class="font-semibold text-red-900 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            Allergen Warning
+                        </h4>
+                        <p class="text-red-700 text-sm" x-text="'Contains: ' + selectedItem.allergens"></p>
+                    </div>
+                </template>
+
+                <!-- Add to Cart Button -->
+                <button @click="addToCart(selectedItem.id, selectedItem.name, selectedItem.price); showItemModal = false;"
+                        class="w-full bg-black text-white font-bold py-4 rounded-lg hover:bg-gray-800 transition">
+                    Add to Cart - {{ hotel.currency_code }} <span x-text="selectedItem.price.toFixed(2)"></span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Cart Sidebar -->
     <div x-show="showCart"
@@ -232,7 +519,8 @@
     </div>
 
     <!-- Overlay -->
-    <div x-show="showCart" @click="showCart = false"
+    <div x-show="showCart || showItemModal"
+         @click="showCart = false; showItemModal = false;"
          class="fixed inset-0 bg-black bg-opacity-50 z-40"
          x-transition:enter="transition-opacity ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -288,12 +576,50 @@
             return {
                 cart: [],
                 showCart: false,
+                showItemModal: false,
                 selectedCategory: null,
+                searchQuery: '',
+                sortBy: 'default',
+                showFeaturedOnly: false,
+                showVegOnly: false,
                 specialRequests: '',
                 paymentMethod: 'CARD',
+                selectedItem: {},
+                specialsSectionShown: false,
                 notification: {
                     show: false,
                     message: ''
+                },
+
+                filterItem(item) {
+                    // Search filter
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        const matchesSearch = item.name.toLowerCase().includes(query) ||
+                                            item.description.toLowerCase().includes(query);
+                        if (!matchesSearch) return false;
+                    }
+
+                    // Featured filter
+                    if (this.showFeaturedOnly && !item.isFeatured && !item.isDailySpecial) {
+                        return false;
+                    }
+
+                    // Vegetarian filter
+                    if (this.showVegOnly && !item.isVegetarian) {
+                        return false;
+                    }
+
+                    return true;
+                },
+
+                handleSearch() {
+                    // Search is handled reactively through filterItem
+                },
+
+                openItemModal(item) {
+                    this.selectedItem = item;
+                    this.showItemModal = true;
                 },
 
                 addToCart(id, name, price) {
@@ -309,6 +635,39 @@
                         });
                     }
                     this.showNotification('Added to cart!');
+                },
+
+                addToCartWithAnimation(event, id, name, price) {
+                    // Add to cart
+                    this.addToCart(id, name, price);
+
+                    // Create flying element
+                    const button = event.currentTarget;
+                    const buttonRect = button.getBoundingClientRect();
+                    const cartIcon = document.querySelector('header svg');
+                    const cartRect = cartIcon.getBoundingClientRect();
+
+                    const flyingEl = document.createElement('div');
+                    flyingEl.innerHTML = '🛒';
+                    flyingEl.style.position = 'fixed';
+                    flyingEl.style.left = buttonRect.left + 'px';
+                    flyingEl.style.top = buttonRect.top + 'px';
+                    flyingEl.style.fontSize = '24px';
+                    flyingEl.style.zIndex = '9999';
+                    flyingEl.style.pointerEvents = 'none';
+
+                    const deltaX = cartRect.left - buttonRect.left;
+                    const deltaY = cartRect.top - buttonRect.top;
+
+                    flyingEl.style.setProperty('--x', deltaX + 'px');
+                    flyingEl.style.setProperty('--y', deltaY + 'px');
+                    flyingEl.classList.add('fly-to-cart');
+
+                    document.body.appendChild(flyingEl);
+
+                    setTimeout(() => {
+                        flyingEl.remove();
+                    }, 800);
                 },
 
                 updateQuantity(id, change) {
@@ -420,6 +779,31 @@
                         }
                     }
                     return cookieValue;
+                },
+
+                init() {
+                    // Lazy load images using Intersection Observer
+                    const imageObserver = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const img = entry.target;
+                                img.src = img.dataset.src;
+                                img.classList.add('loaded');
+                                observer.unobserve(img);
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.lazy-load').forEach(img => {
+                        imageObserver.observe(img);
+                    });
+
+                    // Register Service Worker for offline support
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('/static/sw.js').catch(err => {
+                            console.log('Service worker registration failed:', err);
+                        });
+                    }
                 }
             }
         }

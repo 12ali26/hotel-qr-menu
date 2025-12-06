@@ -92,23 +92,82 @@
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">PNG, JPG, WEBP up to 10MB</p>
                         </div>
 
-                        <div class="flex items-center space-x-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_available" checked class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Available</span>
+                        <!-- Basic Checkboxes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Basic Options
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_vegetarian" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegetarian</span>
+                            <div class="flex flex-wrap items-center gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_available" checked class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Available</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_featured" class="rounded border-gray-300 text-amber-500 focus:ring-amber-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">⭐ Featured</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_daily_special" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">🔥 Daily Special</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Dietary Tags -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Dietary Tags
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_vegan" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Vegan</span>
+                            <div class="flex flex-wrap items-center gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_vegetarian" class="rounded border-gray-300 text-green-500 focus:ring-green-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">🌱 Vegetarian</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_vegan" class="rounded border-gray-300 text-green-500 focus:ring-green-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">🥬 Vegan</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_gluten_free" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Gluten-Free</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Spice Level -->
+                        <div>
+                            <label for="spice_level" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Spice Level
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="is_gluten_free" class="rounded border-gray-300 text-gray-700 focus:ring-gray-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Gluten-Free</span>
+                            <select name="spice_level" id="spice_level"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                                <option value="NONE">No Spice</option>
+                                <option value="MILD">🌶️ Mild</option>
+                                <option value="MEDIUM">🌶️🌶️ Medium</option>
+                                <option value="HOT">🌶️🌶️🌶️ Hot</option>
+                                <option value="EXTRA_HOT">🌶️🌶️🌶️🌶️ Extra Hot</option>
+                            </select>
+                        </div>
+
+                        <!-- Allergens -->
+                        <div>
+                            <label for="allergens" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Allergens ⚠️
                             </label>
+                            <input type="text" name="allergens" id="allergens"
+                                   placeholder="e.g., Nuts, Dairy, Shellfish"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Comma-separated list of common allergens</p>
+                        </div>
+
+                        <!-- Prep Time -->
+                        <div>
+                            <label for="prep_time_minutes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Preparation Time (minutes)
+                            </label>
+                            <input type="number" name="prep_time_minutes" id="prep_time_minutes" value="15" min="1" max="180"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Estimated preparation time (default: 15 min)</p>
                         </div>
 
                         <button type="submit" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-800 transition">

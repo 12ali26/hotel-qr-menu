@@ -231,6 +231,9 @@ def place_order(request, slug: str):
                 price_at_order=menu_item.price,
             )
 
+            # Increment popularity score for analytics
+            menu_item.increment_popularity()
+
             subtotal += menu_item.price * quantity
 
         # Calculate totals
@@ -784,6 +787,12 @@ def add_menu_item(request, category_id=None):
         is_vegetarian = request.POST.get("is_vegetarian") == "on"
         is_vegan = request.POST.get("is_vegan") == "on"
         is_gluten_free = request.POST.get("is_gluten_free") == "on"
+        # New fields
+        is_featured = request.POST.get("is_featured") == "on"
+        is_daily_special = request.POST.get("is_daily_special") == "on"
+        spice_level = request.POST.get("spice_level", "NONE")
+        allergens = request.POST.get("allergens", "").strip()
+        prep_time_minutes = request.POST.get("prep_time_minutes", 15)
 
         if category_id and name and price:
             try:
@@ -798,6 +807,11 @@ def add_menu_item(request, category_id=None):
                     is_vegetarian=is_vegetarian,
                     is_vegan=is_vegan,
                     is_gluten_free=is_gluten_free,
+                    is_featured=is_featured,
+                    is_daily_special=is_daily_special,
+                    spice_level=spice_level,
+                    allergens=allergens,
+                    prep_time_minutes=int(prep_time_minutes) if prep_time_minutes else 15,
                 )
                 messages.success(request, f"Menu item '{name}' added successfully!")
                 return redirect("core:menu_management")
@@ -842,6 +856,13 @@ def edit_menu_item(request, item_id):
         menu_item.is_vegetarian = request.POST.get("is_vegetarian") == "on"
         menu_item.is_vegan = request.POST.get("is_vegan") == "on"
         menu_item.is_gluten_free = request.POST.get("is_gluten_free") == "on"
+        # New fields
+        menu_item.is_featured = request.POST.get("is_featured") == "on"
+        menu_item.is_daily_special = request.POST.get("is_daily_special") == "on"
+        menu_item.spice_level = request.POST.get("spice_level", "NONE")
+        menu_item.allergens = request.POST.get("allergens", "").strip()
+        prep_time = request.POST.get("prep_time_minutes", 15)
+        menu_item.prep_time_minutes = int(prep_time) if prep_time else 15
         menu_item.save()
 
         messages.success(request, f"Menu item '{menu_item.name}' updated successfully!")

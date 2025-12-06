@@ -204,6 +204,13 @@ class MenuItem(models.Model):
     An individual item on the menu (e.g., a specific dish or drink).
     """
 
+    class SpiceLevel(models.TextChoices):
+        NONE = "NONE", _("No Spice")
+        MILD = "MILD", _("🌶️ Mild")
+        MEDIUM = "MEDIUM", _("🌶️🌶️ Medium")
+        HOT = "HOT", _("🌶️🌶️🌶️ Hot")
+        EXTRA_HOT = "EXTRA_HOT", _("🌶️🌶️🌶️🌶️ Extra Hot")
+
     category: Category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
@@ -235,6 +242,52 @@ class MenuItem(models.Model):
     is_vegan: bool = models.BooleanField(_("Vegan"), default=False)
     is_gluten_free: bool = models.BooleanField(_("Gluten-Free"), default=False)
 
+    # New Enhancement Fields
+    is_featured: bool = models.BooleanField(
+        _("Featured Item"),
+        default=False,
+        help_text=_("Mark as featured/popular item (chef's recommendation)."),
+    )
+    is_daily_special: bool = models.BooleanField(
+        _("Daily Special"),
+        default=False,
+        help_text=_("Mark as today's special offer."),
+    )
+    spice_level: str = models.CharField(
+        _("Spice Level"),
+        max_length=10,
+        choices=SpiceLevel.choices,
+        default=SpiceLevel.NONE,
+        help_text=_("Spiciness level of the dish."),
+    )
+    allergens: str = models.TextField(
+        _("Allergens"),
+        blank=True,
+        help_text=_("Common allergens (e.g., 'Nuts, Dairy, Shellfish')."),
+    )
+    prep_time_minutes: int = models.PositiveIntegerField(
+        _("Prep Time (minutes)"),
+        default=15,
+        help_text=_("Estimated preparation time in minutes."),
+    )
+    popularity_score: int = models.IntegerField(
+        _("Popularity Score"),
+        default=0,
+        help_text=_("Auto-incremented when ordered. Higher = more popular."),
+    )
+    customization_options: dict = models.JSONField(
+        _("Customization Options"),
+        blank=True,
+        null=True,
+        help_text=_("Add-ons, sizes, extras (JSON format)."),
+    )
+    nutritional_info: dict = models.JSONField(
+        _("Nutritional Information"),
+        blank=True,
+        null=True,
+        help_text=_("Calories, protein, carbs, etc. (JSON format)."),
+    )
+
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
 
@@ -246,6 +299,11 @@ class MenuItem(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def increment_popularity(self):
+        """Increment popularity score when item is ordered."""
+        self.popularity_score += 1
+        self.save(update_fields=["popularity_score"])
 
 
 class Table(models.Model):
