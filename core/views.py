@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .models import BusinessOwner, Category, Hotel, MenuItem, Order, OrderItem, Table, WaiterAlert
+from .ai_menu_extractor import extract_menu_from_image, validate_menu_data, estimate_extraction_confidence
 
 logger = logging.getLogger(__name__)
 
@@ -684,6 +685,164 @@ def onboarding(request):
     }
 
     return render(request, "core/onboarding.html", context)
+
+
+@login_required
+def ai_menu_upload(request):
+    """
+    Upload a photo of existing menu for AI extraction.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    if request.method == "POST":
+        menu_photo = request.FILES.get("menu_photo")
+
+        if not menu_photo:
+            messages.error(request, "Please upload a menu photo.")
+            return redirect("core:ai_menu_upload")
+
+        # Validate file type
+        if not menu_photo.content_type.startswith("image/"):
+            messages.error(request, "Please upload a valid image file (JPG, PNG, etc.)")
+            return redirect("core:ai_menu_upload")
+
+        try:
+            # Extract menu data using AI Vision
+            logger.info(f"Starting AI menu extraction for business: {business.name}")
+            menu_data = extract_menu_from_image(menu_photo, business.business_type)
+
+            if not menu_data:
+                messages.error(request, "Failed to extract menu data. Please ensure the image is clear and try again.")
+                return redirect("core:ai_menu_upload")
+
+            # Validate extracted data
+            if not validate_menu_data(menu_data):
+                messages.error(request, "Extracted menu data is invalid. Please try again with a clearer photo.")
+                return redirect("core:ai_menu_upload")
+
+            # Calculate confidence
+            confidence = estimate_extraction_confidence(menu_data)
+            logger.info(f"Menu extraction confidence: {confidence:.2%}")
+
+            # Store extracted data in session for preview
+            request.session["extracted_menu_data"] = menu_data
+            request.session["menu_extraction_confidence"] = confidence
+
+            messages.success(request, f"Menu extracted successfully! Found {len(menu_data['categories'])} categories. Please review and confirm.")
+            return redirect("core:ai_menu_preview")
+
+        except Exception as e:
+            logger.error(f"Error during AI menu extraction: {str(e)}")
+            messages.error(request, f"An error occurred while processing your menu. Please try again.")
+            return redirect("core:ai_menu_upload")
+
+    context = {
+        "business": business,
+    }
+    return render(request, "core/ai_menu_upload.html", context)
+
+
+@login_required
+def ai_menu_preview(request):
+    """
+    Preview and edit AI-extracted menu data before saving.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    # Get extracted menu data from session
+    menu_data = request.session.get("extracted_menu_data")
+    confidence = request.session.get("menu_extraction_confidence", 0.0)
+
+    if not menu_data:
+        messages.warning(request, "No menu data to preview. Please upload a menu photo first.")
+        return redirect("core:ai_menu_upload")
+
+    context = {
+        "business": business,
+        "menu_data": menu_data,
+        "confidence": confidence,
+        "confidence_percent": int(confidence * 100),
+    }
+    return render(request, "core/ai_menu_preview.html", context)
+
+
+@login_required
+def ai_menu_confirm(request):
+    """
+    Confirm and save AI-extracted menu data to database.
+    """
+    business, ownership = get_current_business(request)
+    if not business:
+        return redirect("core:signup")
+
+    if request.method != "POST":
+        return redirect("core:ai_menu_preview")
+
+    # Get extracted menu data from session
+    menu_data = request.session.get("extracted_menu_data")
+
+    if not menu_data:
+        messages.error(request, "No menu data found. Please upload a menu photo first.")
+        return redirect("core:ai_menu_upload")
+
+    try:
+        with transaction.atomic():
+            categories_created = 0
+            items_created = 0
+
+            # Create categories and menu items
+            for cat_data in menu_data.get("categories", []):
+                # Create or get category
+                category, created = Category.objects.get_or_create(
+                    hotel=business,
+                    name=cat_data["name"],
+                    defaults={"sort_order": cat_data.get("sort_order", 0)}
+                )
+
+                if created:
+                    categories_created += 1
+
+                # Create menu items
+                for item_data in cat_data.get("items", []):
+                    # Check if item already exists
+                    if MenuItem.objects.filter(category=category, name=item_data["name"]).exists():
+                        logger.info(f"Skipping duplicate item: {item_data['name']}")
+                        continue
+
+                    MenuItem.objects.create(
+                        category=category,
+                        name=item_data["name"],
+                        description=item_data.get("description", ""),
+                        price=Decimal(str(item_data["price"])),
+                        is_available=True,
+                        is_vegetarian=item_data.get("is_vegetarian", False),
+                        is_vegan=item_data.get("is_vegan", False),
+                        is_gluten_free=item_data.get("is_gluten_free", False),
+                        spice_level=item_data.get("spice_level", "NONE"),
+                        allergens=item_data.get("allergens", ""),
+                        prep_time_minutes=item_data.get("prep_time_minutes", 15),
+                    )
+                    items_created += 1
+
+            # Clear session data
+            del request.session["extracted_menu_data"]
+            if "menu_extraction_confidence" in request.session:
+                del request.session["menu_extraction_confidence"]
+
+            messages.success(
+                request,
+                f"🎉 Menu imported successfully! Created {categories_created} categories and {items_created} items."
+            )
+            return redirect("core:menu_management")
+
+    except Exception as e:
+        logger.error(f"Error saving AI-extracted menu: {str(e)}")
+        messages.error(request, f"An error occurred while saving your menu. Please try again.")
+        return redirect("core:ai_menu_preview")
 
 
 @login_required

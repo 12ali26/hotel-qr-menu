@@ -16,6 +16,10 @@ urlpatterns = [
     path("onboarding/", views.onboarding, name="onboarding"),
     path("switch-business/<int:business_id>/", views.switch_business, name="switch_business"),
     path("add-business/", views.add_business, name="add_business"),
+    # AI Menu Import
+    path("ai-menu-upload/", views.ai_menu_upload, name="ai_menu_upload"),
+    path("ai-menu-preview/", views.ai_menu_preview, name="ai_menu_preview"),
+    path("ai-menu-confirm/", views.ai_menu_confirm, name="ai_menu_confirm"),
     # Menu management
     path("menu-management/", views.menu_management, name="menu_management"),
     path("menu-management/add-category/", views.add_category, name="add_category"),
