@@ -1,6 +1,6 @@
 """
 AI Menu Extractor - Uses Vision AI to extract menu data from photos
-Supports OpenAI GPT-4 Vision and Anthropic Claude 3.5 Sonnet
+Uses OpenRouter to access GPT-4 Vision and other AI models
 """
 import base64
 import json
@@ -45,21 +45,24 @@ def extract_menu_from_image(image_file, business_type: str = "RESTAURANT") -> Op
         }
     """
     try:
-        # Get OpenAI API key from environment
-        api_key = os.environ.get('OPENAI_API_KEY')
+        # Get OpenRouter API key from environment
+        api_key = os.environ.get('OPENROUTER_API_KEY')
         if not api_key:
-            logger.warning("OPENAI_API_KEY not set. AI menu extraction unavailable.")
+            logger.warning("OPENROUTER_API_KEY not set. AI menu extraction unavailable.")
             return None
 
-        # Import OpenAI library
+        # Import OpenAI library (OpenRouter is OpenAI-compatible)
         try:
             from openai import OpenAI
         except ImportError:
             logger.error("OpenAI library not installed. Run: pip install openai")
             return None
 
-        # Initialize OpenAI client
-        client = OpenAI(api_key=api_key)
+        # Initialize OpenRouter client (OpenAI-compatible API)
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://openrouter.ai/api/v1"
+        )
 
         # Convert image to base64
         image_bytes = image_file.read()
@@ -111,9 +114,9 @@ Important guidelines:
 Be thorough and extract every single item visible in the menu.
 """
 
-        # Call GPT-4 Vision API
+        # Call GPT-4 Vision API via OpenRouter
         response = client.chat.completions.create(
-            model="gpt-4o",  # GPT-4 Vision model
+            model="openai/gpt-4o",  # GPT-4 Vision model via OpenRouter
             messages=[
                 {
                     "role": "user",

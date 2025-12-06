@@ -5,7 +5,7 @@ django-cors-headers>=4.0.0  # For API CORS support
 djangorestframework>=3.14.0  # For REST API endpoints
 cloudinary>=1.44.0  # Cloud image storage
 django-cloudinary-storage>=0.3.0  # Django integration for Cloudinary
-openai>=1.0.0  # OpenAI API for AI menu extraction from photos
+openai>=1.0.0  # OpenAI-compatible client for OpenRouter (AI menu extraction)
 
 # Production dependencies
 gunicorn>=21.2.0  # WSGI HTTP Server
