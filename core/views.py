@@ -165,7 +165,10 @@ def hotel_menu(request, slug: str):
             "categories": categories,
             "location": location,
         }
-        return render(request, "core/menu.html", context)
+
+        # Select template based on menu theme
+        template_name = "core/menu_dark.html" if hotel.menu_theme == "DARK" else "core/menu.html"
+        return render(request, template_name, context)
 
     except Exception as e:
         logger.error("=" * 80)

@@ -19,6 +19,10 @@ class Hotel(models.Model):
         CAFE = "CAFE", _("Café")
         CLOUD_KITCHEN = "CLOUD_KITCHEN", _("Cloud Kitchen")
 
+    class MenuTheme(models.TextChoices):
+        MODERN = "MODERN", _("Modern Light")
+        DARK = "DARK", _("Dark Premium")
+
     name: str = models.CharField(
         _("Business Name"),
         max_length=255,
@@ -80,6 +84,14 @@ class Hotel(models.Model):
         _("Enable Room Charging"),
         default=False,
         help_text=_("Allow guests to charge orders to their room (for hotels)."),
+    )
+    # Menu customization
+    menu_theme: str = models.CharField(
+        _("Menu Theme"),
+        max_length=20,
+        choices=MenuTheme.choices,
+        default=MenuTheme.MODERN,
+        help_text=_("The visual theme for the customer-facing menu."),
     )
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
