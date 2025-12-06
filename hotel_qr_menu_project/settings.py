@@ -194,6 +194,13 @@ LOGIN_URL = "core:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "core:landing"
 
+# Session configuration
+SESSION_COOKIE_AGE = 86400  # 24 hours (in seconds)
+SESSION_SAVE_EVERY_REQUEST = True  # Refresh session on every request
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Session persists across browser restarts for SESSION_COOKIE_AGE
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie (security)
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+
 # Security settings for production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
