@@ -47,3 +47,30 @@ def track_recommendation_conversions(sender, instance, created, **kwargs):
         # In a full implementation, you'd check session data to see which
         # specific items were recommended
         logger.debug(f"Order {instance.id} completed - conversion tracking handled")
+
+
+@receiver(post_save, sender=Order)
+def update_table_status_on_order_change(sender, instance, created, **kwargs):
+    """
+    Reset table to AVAILABLE when order is completed or cancelled.
+
+    This ensures tables don't stay stuck in OCCUPIED status after
+    customers have finished their meal or cancelled their order.
+    """
+    # Only process if this order has an associated table
+    if not instance.table:
+        return
+
+    # Import here to avoid circular imports
+    from .models import Table
+
+    # When order is completed or cancelled, free up the table
+    if instance.status in [Order.OrderStatus.COMPLETED, Order.OrderStatus.CANCELLED]:
+        # Only update if table is currently occupied
+        if instance.table.status == Table.TableStatus.OCCUPIED:
+            instance.table.status = Table.TableStatus.AVAILABLE
+            instance.table.save(update_fields=["status"])
+            logger.info(
+                f"Table {instance.table.table_number} set to AVAILABLE "
+                f"after order {instance.id} was {instance.status.lower()}"
+            )
