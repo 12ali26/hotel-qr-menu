@@ -1688,7 +1688,10 @@ def recommendation_dashboard(request):
 
         from datetime import timedelta
         from django.utils import timezone
-        from .recommendation_engine import RecommendationAnalytics
+        from .recommendation_engine import (
+            RecommendationAnalytics,
+            CrossNetworkInsights,
+        )
         from .models import RecommendationEvent, ItemPairFrequency
 
         start_date = timezone.now() - timedelta(days=days)
@@ -1699,6 +1702,12 @@ def recommendation_dashboard(request):
 
         # Get top performing pairs
         top_pairs = analytics.get_top_performing_pairs(limit=10)
+
+        # Get cross-network insights
+        network_insights = CrossNetworkInsights(business)
+        network_size = network_insights.get_network_size()
+        network_trending = network_insights.get_cross_network_trending_patterns(limit=5)
+        network_comparison = network_insights.compare_to_network(analytics)
 
         # Get total revenue for comparison
         total_revenue = (
@@ -1751,6 +1760,10 @@ def recommendation_dashboard(request):
             "top_pairs": top_pairs,
             "daily_trends": daily_trends,
             "monthly_estimate": monthly_estimate,
+            # Cross-network insights
+            "network_size": network_size,
+            "network_trending": network_trending,
+            "network_comparison": network_comparison,
         }
 
         return render(request, "core/recommendation_dashboard.html", context)

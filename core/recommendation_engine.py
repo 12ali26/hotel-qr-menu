@@ -349,3 +349,226 @@ class RecommendationAnalytics:
             .select_related("item_a", "item_b")
             .order_by("-revenue_generated", "-times_converted")[:limit]
         )
+
+
+class CrossNetworkInsights:
+    """
+    Provides insights from across the entire restaurant network.
+
+    This creates powerful network effects - as more restaurants join the platform,
+    recommendations get better for everyone. This is a key competitive moat.
+    """
+
+    def __init__(self, hotel=None):
+        self.hotel = hotel
+
+    def get_network_size(self) -> Dict[str, int]:
+        """Get the size of the network for credibility."""
+        from .models import Hotel, Order
+
+        return {
+            "total_restaurants": Hotel.objects.filter(is_active=True).count(),
+            "total_orders": Order.objects.filter(
+                status=Order.OrderStatus.COMPLETED
+            ).count(),
+            "total_pairs": ItemPairFrequency.objects.count(),
+        }
+
+    def get_similar_restaurants(self, limit: int = 10) -> List[Any]:
+        """
+        Find restaurants similar to this one (by business type, category overlap, etc.).
+
+        Args:
+            limit: Max number of similar restaurants
+
+        Returns:
+            List of similar Hotel objects
+        """
+        from .models import Hotel
+
+        if not self.hotel:
+            return []
+
+        # Find restaurants with same business type
+        similar = Hotel.objects.filter(
+            business_type=self.hotel.business_type, is_active=True
+        ).exclude(id=self.hotel.id)[:limit]
+
+        return list(similar)
+
+    def get_cross_network_trending_patterns(
+        self, business_type: str = None, limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Get trending item combinations across the entire network.
+
+        This shows what's working well across all restaurants, providing
+        inspiration and validation for new restaurants.
+
+        Args:
+            business_type: Filter by business type (RESTAURANT, CAFE, etc.)
+            limit: Number of patterns to return
+
+        Returns:
+            List of trending patterns with aggregate statistics
+        """
+        from django.db.models import Avg, Sum, Count
+        from .models import Hotel
+
+        # Build query to aggregate across network
+        query = ItemPairFrequency.objects.select_related(
+            "item_a__category", "item_b__category", "hotel"
+        )
+
+        # Filter by business type if specified
+        if business_type:
+            query = query.filter(hotel__business_type=business_type)
+        elif self.hotel:
+            query = query.filter(hotel__business_type=self.hotel.business_type)
+
+        # Group by item name patterns (normalize similar items across restaurants)
+        # For MVP, we'll just show top pairs by frequency
+        top_patterns = (
+            query.values(
+                "item_a__name",
+                "item_b__name",
+                "item_a__category__name",
+                "item_b__category__name",
+            )
+            .annotate(
+                total_orders=Sum("times_together"),
+                avg_confidence=Avg("confidence"),
+                restaurant_count=Count("hotel", distinct=True),
+                total_conversions=Sum("times_converted"),
+                total_revenue=Sum("revenue_generated"),
+            )
+            .filter(total_orders__gte=5)  # Minimum 5 occurrences across network
+            .order_by("-total_orders")[:limit]
+        )
+
+        return [
+            {
+                "item_a": pattern["item_a__name"],
+                "item_b": pattern["item_b__name"],
+                "category_a": pattern["item_a__category__name"],
+                "category_b": pattern["item_b__category__name"],
+                "total_orders": pattern["total_orders"],
+                "avg_confidence": round(pattern["avg_confidence"] * 100, 1)
+                if pattern["avg_confidence"]
+                else 0,
+                "restaurant_count": pattern["restaurant_count"],
+                "total_conversions": pattern["total_conversions"] or 0,
+                "total_revenue": pattern["total_revenue"] or Decimal("0.00"),
+            }
+            for pattern in top_patterns
+        ]
+
+    def get_network_benchmarks(self) -> Dict[str, Any]:
+        """
+        Get platform-wide benchmarks for comparison.
+
+        Shows how this restaurant compares to the network average.
+        Useful for identifying improvement opportunities.
+
+        Returns:
+            Dict with network-wide statistics
+        """
+        from django.db.models import Avg, Count
+        from .models import Order, Hotel
+        from datetime import timedelta
+        from django.utils import timezone
+
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+
+        # Network-wide metrics
+        network_stats = Hotel.objects.filter(is_active=True).aggregate(
+            avg_items_per_order=Avg("orders__items__quantity"),
+            avg_order_value=Avg("orders__total_price"),
+        )
+
+        # Recommendation performance across network
+        rec_performance = RecommendationEvent.objects.filter(
+            created_at__gte=thirty_days_ago
+        ).aggregate(
+            total_impressions=Count("id", filter=Q(event_type="IMPRESSION")),
+            total_conversions=Count("id", filter=Q(event_type="CONVERSION")),
+            avg_revenue=Avg("revenue", filter=Q(event_type="CONVERSION")),
+        )
+
+        network_conversion_rate = 0.0
+        if rec_performance["total_impressions"]:
+            network_conversion_rate = (
+                rec_performance["total_conversions"]
+                / rec_performance["total_impressions"]
+                * 100
+            )
+
+        return {
+            "avg_items_per_order": round(
+                network_stats["avg_items_per_order"] or 0, 1
+            ),
+            "avg_order_value": network_stats["avg_order_value"] or Decimal("0.00"),
+            "recommendation_conversion_rate": round(network_conversion_rate, 2),
+            "avg_recommendation_revenue": rec_performance["avg_revenue"]
+            or Decimal("0.00"),
+        }
+
+    def get_inspiration_for_new_restaurant(self) -> Dict[str, Any]:
+        """
+        Provides data-driven insights for restaurants just starting out.
+
+        This is incredibly valuable for new restaurants with no data - they can
+        see what's working across the network and start with proven patterns.
+
+        Returns:
+            Dict with actionable insights for new restaurants
+        """
+        # Get top trending patterns
+        trending = self.get_cross_network_trending_patterns(
+            business_type=self.hotel.business_type if self.hotel else None, limit=5
+        )
+
+        # Get network benchmarks
+        benchmarks = self.get_network_benchmarks()
+
+        # Get network size for credibility
+        network_size = self.get_network_size()
+
+        return {
+            "trending_patterns": trending,
+            "benchmarks": benchmarks,
+            "network_size": network_size,
+            "message": f"Based on insights from {network_size['total_restaurants']} restaurants "
+            f"and {network_size['total_orders']} completed orders",
+        }
+
+    def compare_to_network(
+        self, hotel_analytics: "RecommendationAnalytics"
+    ) -> Dict[str, Any]:
+        """
+        Compare a specific restaurant's performance to network averages.
+
+        Args:
+            hotel_analytics: RecommendationAnalytics instance for the restaurant
+
+        Returns:
+            Dict with comparison metrics
+        """
+        hotel_performance = hotel_analytics.get_performance_summary(days=30)
+        network_benchmarks = self.get_network_benchmarks()
+
+        # Calculate differences
+        conversion_diff = (
+            hotel_performance["conversion_rate"]
+            - network_benchmarks["recommendation_conversion_rate"]
+        )
+
+        return {
+            "your_conversion_rate": hotel_performance["conversion_rate"],
+            "network_avg_conversion_rate": network_benchmarks[
+                "recommendation_conversion_rate"
+            ],
+            "conversion_diff": round(conversion_diff, 2),
+            "performing_above_average": conversion_diff > 0,
+            "network_size": self.get_network_size(),
+        }
