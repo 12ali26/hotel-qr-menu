@@ -610,3 +610,163 @@ class OrderItem(models.Model):
     def total_price(self) -> Decimal:
         """Calculates the total price for this line item."""
         return self.quantity * self.price_at_order
+
+
+class ItemPairFrequency(models.Model):
+    """
+    Tracks how often two menu items are ordered together.
+    Core data model for collaborative filtering recommendations.
+    """
+
+    hotel = models.ForeignKey(
+        Hotel,
+        on_delete=models.CASCADE,
+        related_name="item_pairs",
+        verbose_name=_("Business"),
+    )
+    item_a = models.ForeignKey(
+        MenuItem,
+        on_delete=models.CASCADE,
+        related_name="paired_with_a",
+        verbose_name=_("Item A"),
+    )
+    item_b = models.ForeignKey(
+        MenuItem,
+        on_delete=models.CASCADE,
+        related_name="paired_with_b",
+        verbose_name=_("Item B"),
+    )
+
+    # Frequency metrics
+    times_together = models.IntegerField(
+        _("Times Ordered Together"),
+        default=1,
+        help_text=_("How many times these items were ordered in the same order."),
+    )
+    confidence = models.FloatField(
+        _("Confidence Score"),
+        default=0.0,
+        help_text=_("P(B|A) - Probability of B being ordered when A is ordered."),
+    )
+
+    # Performance tracking
+    times_recommended = models.IntegerField(
+        _("Times Recommended"),
+        default=0,
+        help_text=_("How many times this pair was recommended to customers."),
+    )
+    times_converted = models.IntegerField(
+        _("Times Converted"),
+        default=0,
+        help_text=_("How many times the recommendation resulted in a purchase."),
+    )
+    revenue_generated = models.DecimalField(
+        _("Revenue Generated"),
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text=_("Total revenue generated from this recommendation pair."),
+    )
+
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Item Pair Frequency")
+        verbose_name_plural = _("Item Pair Frequencies")
+        unique_together = [["hotel", "item_a", "item_b"]]
+        indexes = [
+            models.Index(fields=["hotel", "-confidence"]),
+            models.Index(fields=["item_a", "-confidence"]),
+        ]
+        ordering = ["-confidence", "-times_together"]
+
+    def __str__(self) -> str:
+        return f"{self.item_a.name} + {self.item_b.name} ({self.times_together}x)"
+
+    @property
+    def conversion_rate(self) -> float:
+        """Calculate conversion rate percentage."""
+        if self.times_recommended == 0:
+            return 0.0
+        return (self.times_converted / self.times_recommended) * 100
+
+
+class RecommendationEvent(models.Model):
+    """
+    Tracks recommendation events for analytics and learning.
+    Records impressions, clicks, and conversions.
+    """
+
+    class EventType(models.TextChoices):
+        IMPRESSION = "IMPRESSION", _("Shown to Customer")
+        CLICK = "CLICK", _("Customer Clicked")
+        CONVERSION = "CONVERSION", _("Customer Purchased")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    hotel = models.ForeignKey(
+        Hotel,
+        on_delete=models.CASCADE,
+        related_name="recommendation_events",
+        verbose_name=_("Business"),
+    )
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recommendation_events",
+        verbose_name=_("Order"),
+        help_text=_("Order associated with conversion event."),
+    )
+
+    # What was recommended
+    source_item = models.ForeignKey(
+        MenuItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="triggered_recommendations",
+        verbose_name=_("Source Item"),
+        help_text=_("Item that triggered the recommendation (e.g., user viewing pizza)."),
+    )
+    recommended_item = models.ForeignKey(
+        MenuItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="was_recommended",
+        verbose_name=_("Recommended Item"),
+        help_text=_("Item that was recommended to the customer."),
+    )
+
+    event_type = models.CharField(
+        _("Event Type"),
+        max_length=20,
+        choices=EventType.choices,
+    )
+
+    # Revenue tracking (for conversion events)
+    revenue = models.DecimalField(
+        _("Revenue"),
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text=_("Revenue generated if recommendation converted."),
+    )
+
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = _("Recommendation Event")
+        verbose_name_plural = _("Recommendation Events")
+        indexes = [
+            models.Index(fields=["hotel", "-created_at"]),
+            models.Index(fields=["event_type", "-created_at"]),
+            models.Index(fields=["recommended_item", "event_type"]),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        if self.recommended_item:
+            return f"{self.get_event_type_display()}: {self.recommended_item.name}"
+        return f"{self.get_event_type_display()}"

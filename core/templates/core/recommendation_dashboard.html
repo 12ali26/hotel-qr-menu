@@ -1,0 +1,241 @@
+{% extends "core/base.html" %}
+
+{% block title %}Recommendation Performance - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Recommendation Performance</h1>
+        <p class="text-gray-600">Track how recommendations are boosting your revenue</p>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="mb-6">
+        <div class="flex gap-2">
+            <a href="?days=7" class="px-4 py-2 rounded-lg {% if days == 7 %}bg-black text-white{% else %}bg-gray-200 text-gray-700{% endif %}">
+                Last 7 days
+            </a>
+            <a href="?days=30" class="px-4 py-2 rounded-lg {% if days == 30 %}bg-black text-white{% else %}bg-gray-200 text-gray-700{% endif %}">
+                Last 30 days
+            </a>
+            <a href="?days=90" class="px-4 py-2 rounded-lg {% if days == 90 %}bg-black text-white{% else %}bg-gray-200 text-gray-700{% endif %}">
+                Last 90 days
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Revenue Generated -->
+        <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-sm opacity-90 mb-1">Revenue from Recommendations</div>
+            <div class="text-4xl font-bold">${{ total_rec_revenue|floatformat:0 }}</div>
+            <div class="text-sm mt-2">{{ rec_revenue_percentage }}% of total revenue</div>
+        </div>
+
+        <!-- Conversions -->
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-sm opacity-90 mb-1">Items Added</div>
+            <div class="text-4xl font-bold">{{ total_conversions }}</div>
+            <div class="text-sm mt-2">From recommendations</div>
+        </div>
+
+        <!-- Conversion Rate -->
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-sm opacity-90 mb-1">Conversion Rate</div>
+            <div class="text-4xl font-bold">{{ conversion_rate }}%</div>
+            <div class="text-sm mt-2">{{ total_impressions }} impressions</div>
+        </div>
+
+        <!-- Estimated Monthly Impact -->
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-sm opacity-90 mb-1">Monthly Estimate</div>
+            <div class="text-4xl font-bold">${{ monthly_estimate|floatformat:0 }}</div>
+            <div class="text-sm mt-2">Based on current rate</div>
+        </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">Daily Revenue from Recommendations</h2>
+        <div class="h-64">
+            <canvas id="revenueTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Top Performing Items -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Top Recommended Combinations</h2>
+            {% if top_pairs %}
+            <div class="space-y-4">
+                {% for pair in top_pairs %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900">{{ pair.item_a.name }} + {{ pair.item_b.name }}</div>
+                        <div class="text-sm text-gray-600 mt-1">
+                            {{ pair.times_converted }} conversions
+                            <span class="mx-2">•</span>
+                            {{ pair.conversion_rate|floatformat:1 }}% conversion rate
+                        </div>
+                    </div>
+                    <div class="text-right ml-4">
+                        <div class="font-bold text-green-600 text-lg">${{ pair.revenue_generated|floatformat:2 }}</div>
+                        <div class="text-xs text-gray-500">Revenue</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <svg class="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p class="font-medium mb-1">No data yet</p>
+                <p class="text-sm">Recommendations will appear here once customers start ordering</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Insights & Tips -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">💡 Insights & Tips</h2>
+            <div class="space-y-4">
+                {% if rec_revenue_percentage > 20 %}
+                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="text-2xl mr-3">🎉</div>
+                        <div>
+                            <div class="font-semibold text-green-900">Excellent Performance!</div>
+                            <div class="text-sm text-green-700 mt-1">
+                                Recommendations are driving {{ rec_revenue_percentage }}% of your revenue. This is exceptional!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% elif rec_revenue_percentage > 10 %}
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="text-2xl mr-3">📈</div>
+                        <div>
+                            <div class="font-semibold text-blue-900">Good Progress</div>
+                            <div class="text-sm text-blue-700 mt-1">
+                                {{ rec_revenue_percentage }}% of revenue from recommendations. Keep building data!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="text-2xl mr-3">🚀</div>
+                        <div>
+                            <div class="font-semibold text-amber-900">Getting Started</div>
+                            <div class="text-sm text-amber-700 mt-1">
+                                Your recommendation engine is learning. More orders = better recommendations!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="text-2xl mr-3">💡</div>
+                        <div>
+                            <div class="font-semibold text-gray-900">Pro Tip</div>
+                            <div class="text-sm text-gray-700 mt-1">
+                                The system learns from completed orders. The more orders you process, the smarter your recommendations become.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if total_impressions < 100 %}
+                <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <div class="flex items-start">
+                        <div class="text-2xl mr-3">📊</div>
+                        <div>
+                            <div class="font-semibold text-indigo-900">Build Your Data</div>
+                            <div class="text-sm text-indigo-700 mt-1">
+                                You need at least 20-30 completed orders for recommendations to become effective. Keep going!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Dashboard Button -->
+    <div class="mt-8 text-center">
+        <a href="{% url 'core:dashboard' %}" class="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Revenue trend chart
+const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+
+const dailyTrends = {{ daily_trends|safe }};
+const labels = dailyTrends.map(d => d.date);
+const data = dailyTrends.map(d => d.revenue);
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Revenue from Recommendations',
+            data: data,
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return '$' + context.parsed.y.toFixed(2);
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value;
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.db import transaction
+from django.db.models import Count, Sum, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
@@ -199,10 +200,29 @@ def hotel_menu(request, slug: str):
         )
         logger.info(f"Found {categories.count()} categories")
 
+        # Get popular items for recommendations
+        from .recommendation_engine import SimpleRecommendationEngine
+        from datetime import timedelta
+        from django.utils import timezone
+
+        # Get trending items (ordered recently)
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        trending_items = (
+            MenuItem.objects.filter(
+                category__hotel=hotel,
+                is_available=True,
+                order_items__order__created_at__gte=seven_days_ago,
+            )
+            .annotate(recent_orders=Count("order_items"))
+            .filter(recent_orders__gte=2)
+            .order_by("-recent_orders")[:5]
+        )
+
         context = {
             "hotel": hotel,
             "categories": categories,
             "location": location,
+            "trending_items": trending_items,
         }
 
         # Select template based on menu theme
@@ -1538,3 +1558,204 @@ def add_business(request):
             return render(request, "core/add_business.html")
 
     return render(request, "core/add_business.html")
+
+
+# ============================================================================
+# RECOMMENDATION ENGINE VIEWS
+# ============================================================================
+
+
+@require_http_methods(["GET"])
+def get_item_recommendations(request, item_id):
+    """
+    API endpoint to get recommendations for a specific menu item.
+
+    Returns:
+        JSON response with recommended items
+    """
+    try:
+        menu_item = get_object_or_404(MenuItem, id=item_id, is_available=True)
+        hotel = menu_item.category.hotel
+
+        from .recommendation_engine import SimpleRecommendationEngine
+
+        engine = SimpleRecommendationEngine(hotel)
+        recommendations = engine.get_recommendations(menu_item, limit=3)
+
+        # Track impressions for these recommendations
+        for rec in recommendations:
+            engine.track_impression(
+                source_item=menu_item, recommended_item=rec["item"]
+            )
+
+        # Format response
+        rec_data = []
+        for rec in recommendations:
+            item = rec["item"]
+            rec_data.append(
+                {
+                    "id": item.id,
+                    "name": item.name,
+                    "description": item.description,
+                    "price": str(item.price),
+                    "image": item.image.url if item.image else None,
+                    "reason": rec["reason"],
+                    "confidence": rec["confidence"],
+                }
+            )
+
+        return JsonResponse({"recommendations": rec_data})
+
+    except Exception as e:
+        logger.error(f"Error getting recommendations: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def track_recommendation_event(request):
+    """
+    API endpoint to track recommendation events (impressions, clicks, conversions).
+
+    Expected POST data:
+    {
+        "event_type": "impression" | "click" | "conversion",
+        "hotel_slug": "restaurant-slug",
+        "source_item_id": 123,  # optional
+        "recommended_item_id": 456,
+        "revenue": "12.50"  # optional, for conversions
+    }
+    """
+    try:
+        data = json.loads(request.body)
+
+        event_type = data.get("event_type")
+        hotel_slug = data.get("hotel_slug")
+        source_item_id = data.get("source_item_id")
+        recommended_item_id = data.get("recommended_item_id")
+
+        if not event_type or not recommended_item_id:
+            return JsonResponse(
+                {"error": "event_type and recommended_item_id are required"},
+                status=400,
+            )
+
+        # Get hotel
+        hotel = get_object_or_404(Hotel, slug=hotel_slug)
+
+        # Get items
+        source_item = None
+        if source_item_id:
+            source_item = get_object_or_404(MenuItem, id=source_item_id)
+
+        recommended_item = get_object_or_404(MenuItem, id=recommended_item_id)
+
+        # Import models
+        from .models import RecommendationEvent
+
+        # Create event
+        event = RecommendationEvent.objects.create(
+            hotel=hotel,
+            source_item=source_item,
+            recommended_item=recommended_item,
+            event_type=event_type.upper(),
+            revenue=Decimal(data.get("revenue", "0.00")),
+        )
+
+        logger.info(f"Tracked {event_type} event for {recommended_item.name}")
+
+        return JsonResponse({"status": "success", "event_id": str(event.id)})
+
+    except Exception as e:
+        logger.error(f"Error tracking recommendation event: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+def recommendation_dashboard(request):
+    """
+    Analytics dashboard showing recommendation performance and ROI.
+    """
+    try:
+        business, ownership = get_current_business(request)
+
+        if not business:
+            messages.error(request, "No business found. Please complete onboarding first.")
+            return redirect("core:onboarding")
+
+        # Date range filter (default 30 days)
+        days = int(request.GET.get("days", 30))
+
+        from datetime import timedelta
+        from django.utils import timezone
+        from .recommendation_engine import RecommendationAnalytics
+        from .models import RecommendationEvent, ItemPairFrequency
+
+        start_date = timezone.now() - timedelta(days=days)
+
+        # Get performance summary
+        analytics = RecommendationAnalytics(business)
+        performance = analytics.get_performance_summary(days)
+
+        # Get top performing pairs
+        top_pairs = analytics.get_top_performing_pairs(limit=10)
+
+        # Get total revenue for comparison
+        total_revenue = (
+            Order.objects.filter(
+                hotel=business,
+                created_at__gte=start_date,
+                status__in=[Order.OrderStatus.COMPLETED, Order.OrderStatus.DELIVERED],
+            ).aggregate(total=Sum("total_price"))["total"]
+            or Decimal("0.00")
+        )
+
+        # Calculate percentage
+        rec_revenue_percentage = 0.0
+        if total_revenue > 0:
+            rec_revenue_percentage = (
+                float(performance["total_revenue"]) / float(total_revenue) * 100
+            )
+
+        # Get daily trend data
+        from django.db.models import Count as CountAgg, Sum as SumAgg
+
+        daily_trends = []
+        for i in range(days):
+            date = (timezone.now() - timedelta(days=days - i)).date()
+            day_revenue = (
+                RecommendationEvent.objects.filter(
+                    hotel=business,
+                    created_at__date=date,
+                    event_type=RecommendationEvent.EventType.CONVERSION,
+                ).aggregate(revenue=SumAgg("revenue"))["revenue"]
+                or Decimal("0.00")
+            )
+            daily_trends.append(
+                {"date": date.strftime("%b %d"), "revenue": float(day_revenue)}
+            )
+
+        # Calculate estimated monthly impact
+        daily_avg = performance["total_revenue"] / days if days > 0 else Decimal("0.00")
+        monthly_estimate = daily_avg * 30
+
+        context = {
+            "business": business,
+            "days": days,
+            "total_rec_revenue": performance["total_revenue"],
+            "rec_revenue_percentage": round(rec_revenue_percentage, 1),
+            "total_revenue": total_revenue,
+            "total_conversions": performance["total_conversions"],
+            "total_impressions": performance["total_impressions"],
+            "conversion_rate": performance["conversion_rate"],
+            "top_pairs": top_pairs,
+            "daily_trends": daily_trends,
+            "monthly_estimate": monthly_estimate,
+        }
+
+        return render(request, "core/recommendation_dashboard.html", context)
+
+    except Exception as e:
+        logger.error(f"Error in recommendation dashboard: {str(e)}\n{traceback.format_exc()}")
+        messages.error(request, f"Error loading dashboard: {str(e)}")
+        return redirect("core:dashboard")

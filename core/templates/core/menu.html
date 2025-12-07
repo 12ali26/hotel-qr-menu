@@ -154,6 +154,37 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6 pb-24">
 
+        <!-- Trending Now Section -->
+        {% if trending_items %}
+        <div class="mb-8">
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-5 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-2 flex items-center">
+                    🔥 Trending Right Now
+                </h2>
+                <p class="text-orange-100 text-sm mb-4">Popular items ordered recently</p>
+
+                <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    {% for item in trending_items %}
+                    <div class="min-w-[140px] bg-white/20 backdrop-blur-sm rounded-xl p-3 cursor-pointer hover:bg-white/30 transition"
+                         @click="viewItem({{ item.id }}, '{{ item.name }}', '{{ item.description }}', {{ item.price }}, {% if item.image %}'{{ item.image.url }}'{% else %}null{% endif %}, {{ item.is_vegetarian|lower }}, {{ item.is_vegan|lower }}, {{ item.is_gluten_free|lower }}, '{{ item.spice_level }}', '{{ item.allergens }}', {{ item.prep_time_minutes }}, {{ item.is_featured|lower }})">
+                        {% if item.image %}
+                        <img src="{{ item.image.url }}"
+                             alt="{{ item.name }}"
+                             class="w-full h-24 object-cover rounded-lg mb-2">
+                        {% else %}
+                        <div class="w-full h-24 bg-white/20 rounded-lg mb-2 flex items-center justify-center">
+                            <span class="text-3xl">🍽️</span>
+                        </div>
+                        {% endif %}
+                        <p class="text-sm font-bold text-white">{{ item.name }}</p>
+                        <p class="text-xs text-orange-100 mt-1">{{ item.currency_code|default:"$" }}{{ item.price }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Daily Specials Section -->
         {% for category in categories %}
             {% for item in category.menu_items.all %}

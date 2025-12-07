@@ -46,6 +46,11 @@ urlpatterns = [
     path("api/order/<str:order_id>/status-check/", views.check_order_status, name="check_order_status"),
     path("api/waiter-alert/<int:alert_id>/acknowledge/", views.acknowledge_waiter_alert, name="acknowledge_alert"),
     path("api/<slug:slug>/poll-orders/", views.poll_orders, name="poll_orders"),
+    # Recommendation API
+    path("api/recommendations/item/<int:item_id>/", views.get_item_recommendations, name="get_item_recommendations"),
+    path("api/recommendations/track/", views.track_recommendation_event, name="track_recommendation_event"),
+    # Recommendation Analytics Dashboard
+    path("dashboard/recommendations/", views.recommendation_dashboard, name="recommendation_dashboard"),
     # Kitchen/staff dashboard
     path("kitchen/<slug:slug>/", views.kitchen_dashboard, name="kitchen_dashboard"),
     # HTMX partials for real-time updates
